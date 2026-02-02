@@ -1,0 +1,1747 @@
+---
+title: "Texas2022_analysis_working"
+author: "Kirsten Sheehy"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Overview
+
+The following script cleans and analyzes data from Texas 2022. Fish were collected by Kirsten Sheehy and Jon Aguiñaga. Behavioral data and fish lengths were extracted from videos and photos by Nishika Raghavan. Parasite data were collected by Dr. Jessica Stephenson's lab.
+
+## Packages to Load
+```{r, echo=FALSE, message=FALSE}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(lmtest)
+library(pscl)
+library(MASS)
+library(here)
+library(knitr)
+library(DHARMa)
+library(glmmTMB)
+library(performance)
+library(emmeans)
+```
+
+## Raw Data
+```{r, echo=TRUE, message=FALSE}
+parasite_data <- read.csv(here("data", "copy_RAW_parasite_data_20230428.csv"))
+length_data <- read.csv(here("data", "copy_MERGE_NRkas_TexasFishMeasurements_20250702.csv"))
+boris_data <- read.csv(here("data", "copy_RAW_Texas_BORISdata_20250617.csv"))
+id_data <- read.csv(here("data", "copy_RAW_trial_ID_data_completeonly_20240220.csv"))
+```
+
+
+## Tidy Data
+
+### Parasite Data
+
+Rename columns to be consistent with other datasets.
+```{r, echo=FALSE}
+# rename columns to be consistent across data sets
+parasite_data <- parasite_data %>% dplyr::rename(
+  fish.id = fish.id,
+  site.id = collection.site
+)
+```
+
+Track down some quirks from data entry (e.g. typos) and get formatting consistent.
+```{r, echo=FALSE}
+# change collection.date and dissection.date to a date format (YYYY-MM-DD)
+parasite_data$collection.date <- as.Date(parasite_data$collection.date,
+  format = "%m/%d/%Y"
+)
+
+# some dates in the dissection date column are formatted M/D/YY or MM/DD/YY instead of MM/DD/YYYY.
+# this code finds and fixes those years to match the YYYY format before we use as.Date.
+parasite_data$dissection.date <- parse_date_time(parasite_data$dissection.date, orders = c("mdy", "dmy"))
+# this gets rid of the time stamps
+parasite_data$dissection.date <- as.Date(parasite_data$dissection.date,
+  format = "%m/%d/%Y"
+)
+
+# change site names from abbreviation (WES, BR) to full (Weslaco, Brownsville)
+parasite_data$site.id <- gsub("WES", "Weslaco", parasite_data$site.id)
+parasite_data$site.id <- gsub("BR-OP", "Brownsville", parasite_data$site.id)
+
+# note: the 'OP' in Brownsville stands for 'overpass'. We explored several sites
+# in Brownsville, but only used the ones from the overpass for this study, so I
+# simplified the name to just 'Brownsville'.
+
+# change species names to full (P. formosa, P. latipinna)
+parasite_data$species <- gsub("formosa", "P. formosa", parasite_data$species)
+parasite_data$species <- gsub("latipinna", "P. latipinna", parasite_data$species)
+
+# there were two entries for pf-59. They received different counts of parasites, so I kept both as this was clearly just a labeling issue and not a fish being counted twice. The unique ID is really only important for associating with behavioral trials. These fish did not receive behavior trials, so individual ID is not important.
+
+# checking and fixing data structure
+str(parasite_data)
+parasite_data$site.id <- as.factor(parasite_data$site.id)
+parasite_data$fish.id <- as.factor(parasite_data$fish.id)
+parasite_data$species <- as.factor(parasite_data$species)
+parasite_data$sex <- as.factor(parasite_data$sex)
+parasite_data$sex.label <- as.factor(parasite_data$sex.label)
+parasite_data$sex.species <- as.factor(parasite_data$sex.species)
+parasite_data$totalpara <- as.numeric(parasite_data$totalpara)
+str(parasite_data)
+
+# remove blank rows (empty rows between each entry in original sheet from Jessica, probably for ease of reading)
+parasite_data <- parasite_data %>%
+  tidyr::drop_na(collection.date)
+```
+
+### Length Data
+
+These measurements were done by Nishika and I in QuPath. For each image, there are three measurements: standard, total, and one labeled as the name of the file/fish.id. The file/fish.id is just the measurement we used to set the scale. Nishika measured a centimeter on the ruler in each photo, then set those pixels to equal 10000. This means that for every 10000 pixels, we have 1cm. This checks out with the measurements in the file (e.g. 30328.4 = 3.03cm). This also checks out with going back and eyeballing some measurements from random photos.
+
+Standard length is from the mouth of the fish to the caudal peduncle. Total length is from the mouth to the tip of the tail.
+
+Let's get the column names consistent with the other datasets.
+```{r, echo=FALSE}
+# renaming the columns
+length_data <- length_data %>% dplyr::rename(
+  file.name = Image,
+  length = Length.µm
+)
+```
+
+Now, let's manipulate the data so that the lengths are all in their own columns (one row per fish). Remember, the collection information and fish.id are encoded in the 10000 pixel length name (e.g. br-op_06aug_pl-1_f). We can associate the three measurements by the image file name used in QuPath (e.g. IMG_20220807_155019762.jpg)
+```{r, echo=FALSE}
+# pivot wider so that the fish.id, standard, and total length measurements are in their own columns.
+length_data <- length_data %>%
+  mutate(fish.id = if_else(str_detect(Name, "_"), Name, NA_character_)) %>%
+  fill(fish.id) %>% # Fill down the fish.id so each standard/total gets its fish
+  filter(Name != fish.id) %>% # Remove the rows where Name == fish.id (we already stored them)
+  pivot_wider(names_from = Name, values_from = length) # Reshape wider
+```
+
+Now, let's split up the fish.id column into it's various components: site.id, date, fish.id, and sex (e.g. br-op_06aug_pl-1_f becomes Brownsville, 2022-08-06, PL-1, and F).
+```{r, echo=FALSE}
+# split the fish.id column into site.id, date, fish.id, and sex
+length_data <- length_data %>%
+  tidyr::separate_wider_delim(fish.id,
+    delim = "_",
+    names = c(
+      "site.id",
+      "date.collected",
+      "fish.id",
+      "sex"
+    ),
+    too_few = "align_start"
+  )
+```
+
+Let's also get these column names to match the rest of the data.
+```{r, echo=FALSE}
+# make the fish.id, site.id, and sex format match the rest of the data
+length_data$fish.id <- gsub("pf", "PF", length_data$fish.id)
+length_data$fish.id <- gsub("pl", "PL", length_data$fish.id)
+length_data$site.id <- gsub("wes", "Weslaco", length_data$site.id)
+length_data$site.id <- gsub("brop", "Brownsville", length_data$site.id)
+length_data$site.id <- gsub("br-op", "Brownsville", length_data$site.id)
+length_data$sex <- gsub("f", "F", length_data$sex)
+length_data$sex <- gsub("m", "M", length_data$sex)
+
+# there are 3 NAs for Amazon sex. These labels were probably missing in the photo,
+#  but all Amazons are females. So, let's change those.
+length_data$sex <- length_data$sex %>% replace_na("F")
+
+# change length and date.collected column names
+length_data$standard.length <- length_data$standard
+length_data$total.length <- length_data$total
+length_data$collection.date <- length_data$date.collected
+length_data <- length_data %>%
+  dplyr::select(
+    -standard,
+    -total,
+    -date.collected
+  )
+
+# formatting collection.date column
+length_data$collection.date <- gsub("aug", "-08-", length_data$collection.date)
+# two dates are backwards (-08-11 instead of 11-08-), fixing them here. We did no collections in November.
+length_data$collection.date <- gsub("-08-11", "11-08-", length_data$collection.date)
+length_data$collection.date <- paste0(length_data$collection.date, "2022")
+length_data$collection.date <- as.Date(length_data$collection.date, format = "%d-%m-%Y")
+
+# checking and fixing data structure
+str(length_data)
+length_data$file.name <- as.factor(length_data$file.name)
+length_data$site.id <- as.factor(length_data$site.id)
+length_data$fish.id <- as.factor(length_data$fish.id)
+length_data$sex <- as.factor(length_data$sex)
+```
+
+there are two fish in the length data that need more specific names due to an error in how we initially recorded them in our notebooks. There are two PF-08s, one for Brownsville and one for Weslaco. The Brownsville one eventually became PF-08BR. There is also PF-25B in the boris data. I'm not sure why it was recorded that way (assuming there were two by mistake), but it is in the Weslaco site. I'm changing both of these in the length data to match the Boris data.
+```{r, echo=FALSE}
+# first, I need to change fish.id to a character
+length_data$fish.id <- as.character(length_data$fish.id)
+length_data$fish.id[length_data$fish.id == "PF-08" & length_data$site.id == "Brownsville"] <- "PF-08BR"
+
+# changing fish.id back to a factor
+length_data$fish.id <- as.factor(length_data$fish.id)
+
+# making a simpler version of the length data
+length_data_simple <- length_data[, c("fish.id", "standard.length", "total.length")]
+```
+
+### ID Data
+This is the data from my lab notebook.
+
+We just need to rename the columns to match other datasets.
+```{r, echo=FALSE}
+id_data <- id_data %>% dplyr::rename(
+  video.id = video.ID,
+  fish.id = fish.ID,
+  site.id = site.ID,
+  trial.id = trial.ID,
+  batch.id = batch.ID
+)
+```
+
+### Boris Data
+This tidys up the BORIS data that Nishika collected from our videos. Basically, she recorded when the fish was on the open or sheltered half of the arena, as well as when the "startle stimulus" was applied. The startle was us slapping the water with a pool noodle.
+
+First, let's remove unnecessary ones, create all the columns we need, and rename them to match the other datasets.
+```{r, echo=FALSE}
+# remove unnecessary columns (largely meta data and unused features in BORIS)
+boris_data <- boris_data %>% dplyr::select(
+  -Observation.date, # this is just the day processed in BORIS
+  -Description,
+  -FPS,
+  -Behavioral.category,
+  -Modifiers,
+  -Comment.start,
+  -Comment.stop
+)
+
+# rename columns (to match up across data)
+boris_data <- boris_data %>% dplyr::rename(
+  pool = Subject,
+  trial.length = Total.length,
+  start = Start..s.,
+  stop = Stop..s.,
+  duration = Duration..s.
+)
+
+# split Media.file into columns to extract file name (could also use
+# Observation.id, but figured this would help avoid typos made in Boris)
+boris_data <- boris_data %>% tidyr::separate_wider_delim(Media.file,
+  delim = "/",
+  names = c(
+    "file1",
+    "file2",
+    "file3",
+    "file4",
+    "file5",
+    "video.id"
+  ),
+  too_few = "align_end"
+)
+
+# remove the excess filepath columns
+boris_data <- boris_data %>% dplyr::select(
+  -file1,
+  -file2,
+  -file3,
+  -file4,
+  -file5
+)
+
+# video.id (from the file path split above) is the file name of the recording.
+# It decomposes into the site ID, trial number, batch, and date recorded. The
+# following code duplicates the column, then splits the information in video.id
+# into separate columns.
+boris_data$video.id.split <- boris_data$video.id
+boris_data <- boris_data %>% tidyr::separate_wider_delim(video.id.split,
+  delim = "_",
+  names = c(
+    "site.id",
+    "trial.id",
+    "batch.id",
+    "trial.date"
+  )
+)
+```
+
+Now, let's get the values in each column formatted correctly and fix any typos.
+```{r, echo=FALSE}
+# remove the file type from the trial.date column
+boris_data$trial.date <- gsub(".mov", "", boris_data$trial.date)
+
+# change trial.date from (YYYYMMDD) to a date (YYYY-MM-DD)
+boris_data$trial.date <- as.Date(boris_data$trial.date, format = "%Y%m%d")
+
+# remove 'trial' from the data entries for trial.ID
+boris_data$trial.id <- gsub("trial", "", boris_data$trial.id)
+boris_data$trial.id <- gsub("trail", "", boris_data$trial.id) # had to find a few with a typo in the file name
+
+# remove 'pool' from data in pool column
+boris_data$pool <- gsub("Pool ", "", boris_data$pool)
+
+# change site ID from abbreviations to full name
+# note: doing them in this order is important
+boris_data$site.id <- gsub("Wes", "Weslaco", boris_data$site.id)
+boris_data$site.id <- gsub("WES", "Weslaco", boris_data$site.id)
+boris_data$site.id <- gsub("BR1", "Brownsville", boris_data$site.id)
+boris_data$site.id <- gsub("BR2", "Brownsville", boris_data$site.id)
+boris_data$site.id <- gsub("BR", "Brownsville", boris_data$site.id)
+# note: there are three entry types for Brownsville: BR, BR1, and BR2
+# need to revisit lab notebook to confirm, but I believe BR1 and BR2
+# are the two sides of the garage (i.e. the two cameras)
+```
+
+I know that I won't be using the third trial since most fish didn't get there, so I'm removing that data now.
+```{r, echo=FALSE}
+# removing 3rd trial since most fish didn't get three
+boris_data <- boris_data %>%
+  filter(trial.id == "1" |
+    trial.id == "2")
+```
+
+Now that the columns are all formatted correctly, I need to pull out the behaviors from the Behavior column into their own, separate columns.
+```{r, echo=FALSE}
+# start by duplicating the 'Behavior' column twice. This will be used to extract start and stop times of the three behaviors (open, hiding, startle).
+boris_data <- boris_data %>%
+  dplyr::mutate(behavior.start = Behavior)
+
+boris_data <- boris_data %>%
+  dplyr::mutate(behavior.stop = Behavior)
+
+# then pivot_wider with names from behavior.start and values from start
+boris_data_wide <- boris_data %>%
+  tidyr::pivot_wider(
+    names_from = behavior.start,
+    values_from = start,
+    names_prefix = "start."
+  )
+
+# do the same with stop
+boris_data_wide <- boris_data_wide %>%
+  tidyr::pivot_wider(
+    names_from = behavior.stop,
+    values_from = stop,
+    names_prefix = "stop."
+  )
+
+# I'll remove stop_Startle and duration_Startle because these are 'points' not 'states' and do not have a duration
+boris_data_wide <- boris_data_wide %>% dplyr::select(
+  -stop.Startle
+)
+```
+
+Now, I need to join the ID_data and boris_data_wide datasets.
+```{r, echo=FALSE}
+# I need a column in both ID_data and boris_data_wide to join by
+# I'll create a new column that merges the file name (which already includes
+# site, trial, and batch) with pool # for both data sets
+
+boris_data_wide$merge.id <- paste(
+  boris_data_wide$video.id,
+  boris_data_wide$pool
+)
+
+id_data$merge.id <- paste(
+  id_data$video.id,
+  id_data$pool
+)
+
+boris_data_merge <- boris_data_wide %>%
+  merge(id_data, by = c("merge.id", "pool", "trial.id", "video.id"))
+```
+
+Quick note: we lose some data when we merge the id.data and boris_data_wide. It seems that we are missing five video.ids in boris_data_merge. This is probably from when we removed the third trial, which we did not do for the id_data.
+
+Now we tidy the merged data.
+```{r, echo=FALSE}
+# remove duplicate columns
+boris_data_merge <- boris_data_merge %>% dplyr::select(
+  -merge.id,
+  -site.id.y,
+  -batch.id.y,
+  -trial.date.y
+)
+
+# rename columns to get rid of .x and .y appendages
+boris_data_merge <- boris_data_merge %>% dplyr::rename(
+  site.id = site.id.x,
+  batch.id = batch.id.x,
+  trial.date = trial.date.x
+)
+
+# add column for species from fish.ID
+boris_data_merge <- boris_data_merge %>%
+  mutate(species = fish.id)
+
+boris_data_merge <- boris_data_merge %>%
+  separate_wider_delim(species,
+    delim = "-",
+    names = c(
+      "species",
+      "junk.num"
+    )
+  )
+
+boris_data_merge <- boris_data_merge %>% dplyr::select(-junk.num)
+
+# change species names to full (P. formosa, P. latipinna)
+boris_data_merge$species <- gsub("PF", "P. formosa", boris_data_merge$species)
+boris_data_merge$species <- gsub("PL", "P. latipinna", boris_data_merge$species)
+
+# filling the 'start.startle' column based on fish and trial ID. This way every row has the startle time associated with it for each fish's trial.
+boris_data_merge <- boris_data_merge %>%
+  group_by(fish.id, trial.id) %>%
+  fill(start.Startle, .direction = "downup")
+```
+
+Now, I need to standardize the trial times. When Nishika and I were observing, we sometimes recorded behaviors for longer than the prescribed 10 minutes. The following code finds the earliest behavior observation (either start.hiding or start.open) and then cuts off any observations 10 minutes after the startle.
+```{r, echo=FALSE}
+# new columns with the earliest open and hiding value per fish per trial
+boris_data_merge <- boris_data_merge %>% 
+  group_by(fish.id, trial.id) %>% 
+  mutate(
+    earliest.open = min(start.Open, na.rm = TRUE),
+    earliest.hiding = min(start.Hiding, na.rm = TRUE)
+  )
+
+# now, we need to remove the infinite values (caused by no minimum open or hiding value)
+boris_data_merge[sapply(boris_data_merge, is.infinite)] <- NA
+
+# creates a trial cutoff time by taking the startle time
+# and adding 600 seconds (10 minutes) to it
+boris_data_merge <- boris_data_merge %>%
+  group_by(fish.id, trial.id) %>%
+  mutate(
+    trial.end = start.Startle + 600
+  )
+
+# now, I need to remove all observations per fish per trial that exceed this cutoff time
+boris_data_cutoff <- boris_data_merge %>%
+  group_by(fish.id, trial.id) %>%
+  filter(start.Open <= trial.end |
+    start.Hiding <= trial.end)
+  
+```
+
+Now, I am going to replace any end times that go past the prescribed trial end time (10 minutes, or 600 seconds). Nishika and I often accidentally just watched the video longer than we needed to.
+```{r}
+# now, I need to create an 'end cap' value to replace any 'stop' behaviors that went past the trial end time (10 minutes, or 600 seconds after the startle)
+# basically, I need to close the observation (like in Boris)
+
+# this also means I'll need to change the 'duration' columns, which are automatically
+# exported from Boris.
+
+# replace stop.Open with trial cutoff if higher than cutoff
+boris_data_cutoff <- boris_data_cutoff %>%
+  group_by(fish.id, trial.id) %>%
+  mutate(stop.Open = if_else(stop.Open > trial.end, trial.end, stop.Open))
+
+# replace stop.Hiding with trial cutoff if higher than cutoff
+boris_data_cutoff <- boris_data_cutoff %>%
+  group_by(fish.id, trial.id) %>%
+  mutate(stop.Hiding = if_else(stop.Hiding > trial.end, trial.end, stop.Hiding))
+
+# now, recalculate duration based on new end times
+boris_data_cutoff <- boris_data_cutoff %>%
+  group_by(fish.id, trial.id) %>%
+  mutate(duration.Open = stop.Open - start.Open)
+
+boris_data_cutoff <- boris_data_cutoff %>%
+  group_by(fish.id, trial.id) %>%
+  mutate(duration.Hiding = stop.Hiding - start.Hiding)
+```
+
+Now, I need to id observations that are pre vs. post startle. If they start pre-startle and end post-startle, I'll need to chop up the observation so that there are now two--one pre- and one post-startle.
+```{r}
+# I need to separate data into before, after, and bridging the cue start time
+boris_data_cutoff <- boris_data_cutoff %>%
+  group_by(fish.id, trial.id) %>%
+  rowwise() %>%
+  mutate(
+    category = case_when(
+      stop.Hiding <= start.Startle ~ "before",
+      stop.Open <= start.Startle ~ "before",
+      start.Hiding >= start.Startle ~ "after",
+      start.Open >= start.Startle ~ "after",
+      TRUE ~ "bridge"
+    )
+  )
+
+# need to compute before/after times to split up the bridging observations
+before_startle_data <- boris_data_cutoff %>%
+  filter(category == "bridge") %>%
+  mutate(stop.Open = start.Startle) %>%
+  mutate(stop.Hiding = start.Startle) %>%
+  mutate(duration.Hiding = (stop.Hiding - start.Hiding)) %>%
+  mutate(duration.Open = (stop.Open - start.Open))
+
+after_startle_data <- boris_data_cutoff %>%
+  filter(category == "bridge") %>%
+  mutate(start.Open = start.Startle) %>%
+  mutate(start.Hiding = start.Startle) %>%
+  mutate(duration.Hiding = (stop.Hiding - start.Hiding)) %>%
+  mutate(duration.Open = (stop.Open - start.Open))
+
+# now we bring those all back together, but first remove the bridge data
+boris_data_cutoff <- boris_data_cutoff %>%
+  filter(category != "bridge")
+
+boris_data_cutoff <- rbind(boris_data_cutoff, before_startle_data)
+boris_data_cutoff <- rbind(boris_data_cutoff, after_startle_data)
+boris_data_cutoff <- as.data.frame(boris_data_cutoff)
+```
+
+Creating some summary data
+```{r, echo=FALSE}
+# summary of before startle behavior
+boris_data_summary_b4 <- boris_data_cutoff %>%
+  filter(stop.Hiding <= start.Startle | stop.Open <= start.Startle) %>% 
+  group_by(fish.id, trial.id, site.id, species) %>% # I think the species argument is redundant, since that is coded in the fish.id
+  mutate(total.time.b4 = (start.Startle - pmin(earliest.open, earliest.hiding))) %>% 
+  summarise(
+    total.time.hiding.b4 = sum(duration.Hiding, na.rm = TRUE),
+    total.time.open.b4 = sum(duration.Open, na.rm = TRUE),
+    total.behavior.switches.b4 = n(),
+    total.time.b4 = mean(total.time.b4)
+  )
+
+# the way that the switches are calculated in the above code needs to be reduced by 1
+
+boris_data_summary_b4$total.behavior.switches.b4 <- boris_data_summary_b4$total.behavior.switches.b4 - 1
+
+# summary of after startle behavior
+boris_data_summary_after <- boris_data_cutoff %>%
+  filter(start.Hiding >= start.Startle | start.Open >= start.Startle) %>% 
+  group_by(fish.id, trial.id, site.id, species) %>%
+  mutate(total.time.after = (trial.end - start.Startle)) %>% 
+  summarise(
+    total.time.hiding.after = sum(duration.Hiding, na.rm = TRUE),
+    total.time.open.after = sum(duration.Open, na.rm = TRUE),
+    total.behavior.switches.after = n(),
+    total.time.after = mean(total.time.after)
+  )
+
+# the way that the switches are calculated in the above code needs to be reduced by 1
+
+boris_data_summary_after$total.behavior.switches.after <- boris_data_summary_after$total.behavior.switches.after - 1
+
+
+# merging the before/after summaries
+boris_data_summary <- left_join(boris_data_summary_b4, boris_data_summary_after, by = c("fish.id", "trial.id", "site.id", "species"))
+
+boris_data_summary <- boris_data_summary %>% 
+  group_by(fish.id, trial.id) %>% 
+  mutate(prop.open.b4 = (total.time.open.b4/total.time.b4)) %>% 
+  mutate(prop.open.after = (total.time.open.after/total.time.after)) %>% 
+  mutate(prop.open = sum(total.time.open.b4, total.time.open.after)/sum(total.time.b4, total.time.after))
+```
+
+### All data
+Merge all data into a single dataframe.
+```{r, echo=FALSE}
+all_data <- boris_data_summary %>%
+  left_join(length_data_simple, by = "fish.id", relationship = "many-to-many")
+
+all_data <- all_data %>%
+  left_join(parasite_data, by = c("site.id", "fish.id", "species"))
+```
+
+We did not have fraction of a second precision in our observations, so I'm removing the decimal for time values to create integers (this will also make some anlysis easier).
+```{r}
+all_data$total.time.hiding.b4 <- round(all_data$total.time.hiding.b4, 0)
+all_data$total.time.hiding.after <- round(all_data$total.time.hiding.after, 0)
+all_data$total.time.open.b4 <- round(all_data$total.time.open.b4, 0)
+all_data$total.time.open.after <- round(all_data$total.time.open.after, 0)
+all_data$total.time.b4 <- round(all_data$total.time.b4, 0)
+all_data$total.time.after <- round(all_data$total.time.after, 0)
+```
+
+Pivot the data longer for graphing
+```{r}
+# pivoting data so I can plot time before/after together
+all_data_long <- all_data %>% 
+  pivot_longer(
+    cols = starts_with("prop"),
+    names_to = "prop.type",
+    values_to = "proportion",
+    values_drop_na = TRUE
+  )
+
+# set the prop.type order
+all_data_long$prop.type <- factor(all_data_long$prop.type, levels = c("prop.open.b4", "prop.open.after", "prop.open"))
+```
+
+## Inspect Data
+First, some 'dummy checks' to make sure the data make sense
+```{r, echo=FALSE}
+# fish.IDs
+unique(id_data$fish.id) # 68 unique IDs
+unique(boris_data_summary$fish.id) # 68 unique IDs
+unique(parasite_data$fish.id) # 121, but 2 are just 'P.formosa' and 'P.latipina' because of how fish were labeled
+unique(length_data$fish.id) # 128, but this is probably ok. We photographed way more fish for length than we got into behavioral trials
+unique(all_data$fish.id) # 68 unique IDs
+
+# video.ID
+unique(boris_data_cutoff$video.id) # 28
+unique(id_data$video.id) # 36
+```
+
+This all makes sense. The number of unique fish IDs from my notebook match up with the boris data. There are more parasite fish IDs because we sent Jessica extra fish that didn't go through trials. Same for fish lengths, more were photographed than went through trials.
+
+We have fewer video IDs in the boris data because we removed trial 3. We removed trial 3 because most fish didn't make it through all three trials.
+
+Now, let's make some histograms.
+```{r}
+# length data
+length_hist <- all_data %>%
+  ggplot(mapping = aes(standard.length)) +
+  geom_histogram()
+length_hist
+```
+
+Seems like a fairly normal distribution for length! Two mongo fish were over 5cm!
+
+Let's take a look at the parasite data.
+```{r}
+# all parasite data
+parasite_hist <- parasite_data %>%
+  ggplot(mapping = aes(totalpara)) +
+  geom_histogram()
+parasite_hist
+
+
+# parasite data for fish that went through trials
+parasite_beh_hist <- all_data %>%
+  ggplot(mapping = aes(totalpara)) +
+  geom_histogram()
+parasite_beh_hist
+```
+
+Not a normal distribution. No obvious pattern here, besides a lot of zeros. Should check to see how this matches up with notes in the parasite data about specimen quality).
+
+Let's look at the parasites by species and site.
+```{r}
+# parasite data only
+sp_parasite_box <- parasite_data %>%
+  ggplot(mapping = aes(
+    fill = species,
+    x = site.id,
+    y = totalpara
+  )) +
+  geom_boxplot()
+sp_parasite_box
+
+# behavior parasite data
+# parasite data only
+sp_parasite_beh_box <- all_data %>%
+  ggplot(mapping = aes(
+    fill = species,
+    x = site.id,
+    y = totalpara
+  )) +
+  geom_boxplot()
+sp_parasite_beh_box
+
+```
+
+Ok, so there is a clear pattern of more parasites in Brownsville, generally. It also seems like there may be more parasites on Amazons in both sites, but we'll see what the stats say.
+
+Now, let's take a look at the shape of the behavior data.
+```{r}
+# boris_data, distributions
+open_hist <- all_data %>%
+  ggplot(mapping = aes(prop.open)) +
+  geom_histogram()
+open_hist
+
+# before startle
+b4.open_hist <- all_data %>%
+  ggplot(mapping = aes(prop.open.b4)) +
+  geom_histogram()
+b4.open_hist
+
+# after startle
+after.open_hist <- all_data %>%
+  ggplot(mapping = aes(prop.open.after)) +
+  geom_histogram()
+after.open_hist
+```
+
+Now, let's take a look at the proportion of time spent in the open by species.
+```{r}
+# proportion time in open total
+species_prop_total <- all_data %>%
+  ggplot(mapping = aes(
+    x = species,
+    y = prop.open,
+    fill = species
+  )) +
+  geom_boxplot()
+species_prop_total
+
+# proportion time in open before startle by species
+species_prop_open <- all_data %>%
+  ggplot(mapping = aes(
+    x = species,
+    y = prop.open.b4,
+    fill = species
+  )) +
+  geom_boxplot()
+species_prop_open
+
+# proportion time in open after startle
+species_prop_after <- all_data %>%
+  ggplot(mapping = aes(
+    x = species,
+    y = prop.open.after,
+    fill = species
+  )) +
+  geom_boxplot()
+species_prop_after
+```
+
+Ok, now I want to plot before/after within species. Need to use the all_data_long.
+```{r}
+# proportion time before/after by species
+prop_time_total <- all_data_long %>%
+  ggplot(mapping = aes(
+    x = prop.type,
+    y = proportion,
+    fill = species
+  )) +
+  geom_boxplot()
+prop_time_total
+```
+
+We'll see how the stats pan out, but it looks like Amazons might spend more time in the open than sailfins in general, and especially after the startle!
+## Models
+### Parasites
+
+First, I want to see if there is a difference in parasite load between Amazons and Sailfins. This will be using the full dataset from Jessica, which includes fish that did not go through behavioral trials. We'll start with both sites, but I may just end up looking at the Weslaco site since that is a more balanced dataset.
+
+I kind of know already that these are going to be quite zero inflated, but let's start with a full linear model to confirm.
+```{r}
+mod_full <- lm(totalpara ~ species * site.id,
+  data = parasite_data
+)
+
+# to run all the tests in DHARMa, you first have to simulate your residuals
+sim.mod_full <- DHARMa::simulateResiduals(mod_full)
+
+# then you can plot them
+plot(sim.mod_full) # op, both of these look pretty bad
+plotResiduals(sim.mod_full)
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.mod_full) # dispersion looks ok, but the QQ plot is bad
+
+# yes we can see that the data is super zero inflated
+DHARMa::testZeroInflation(sim.mod_full) # yep, super zero inflated
+```
+
+Ok, so the data is zero inflated. So we need to fit a different kind of model (poisson or possibly binomial).
+```{r}
+mod_full_poisson <- glmmTMB(totalpara ~ species * site.id,
+  family = "poisson",
+  ziformula = ~., # the ~. argument specifies the formula to match the model oarameters (i.e. species*site.id)
+  data = parasite_data
+)
+
+mod_full_nbin <- glmmTMB(totalpara ~ species * site.id,
+  family = "nbinom2", # I chose nbinom2 because nbinom1 fails to converge and it is the "classic parameterization" (https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html). Tbh, I don't really understand why nbinom2 works or if it really is better.
+  ziformula = ~.,
+  data = parasite_data
+)
+
+#
+check_overdispersion(mod_full_poisson) # data is over dispersed
+check_overdispersion(mod_full_nbin) # data is not over dispersed
+lrtest(mod_full_poisson, mod_full_nbin) # there is a sig difference between the two
+# checking AIC
+anova(mod_full_poisson, mod_full_nbin) # nbin model is much lower
+```
+
+Now, let's do some backwards model selection.
+```{r}
+# interaction model
+mod_full_nbin <- glmmTMB(totalpara ~ species * site.id,
+  family = "nbinom2",
+  ziformula = ~species * site.id,
+  data = parasite_data
+)
+
+# no interaction model
+mod_combined_nbin <- glmmTMB(totalpara ~ species + site.id,
+  family = "nbinom2",
+  ziformula = ~species + site.id,
+  data = parasite_data
+)
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_full_nbin, mod_combined_nbin) # no difference, so let's go with the combined model
+```
+
+Ok let's more forward with the combined model. Let's check those assumptions.
+```{r}
+# checking assumptions for the combined model
+# First we have to simulate your residuals
+sim.output <- DHARMa::simulateResiduals(mod_combined_nbin)
+
+# then you can plot them
+plot(sim.output) # QQ plot not perfect, but otherwise things look ok
+
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.output) # QQ not great, but outlier and dispersion ok. Are glmms robust to non-normality, too?
+
+# from poking around, it seems like estimating overdispersion is how we evaluate goodness of fit (versus an r-squared). Not sure if that is the correct move, but here we go. I also used this earlier on to evaluate whether I should use a negbin or poisson.
+check_overdispersion(mod_combined_nbin) # no overdispersion detected. dispersion ratio = 1.418, p = 0.2
+```
+
+Let's take a look at our final model.
+```{r}
+summary(mod_combined_nbin) # species insignificant (est = -0.06, SE = 0.32, p = 0.85) and site highly significant in conditional model (est = -2.46, SE = 0.32, p = 2.96e-14), but both insignificant in the zero-inflation model (species est = 19.80, SE = 9848.17, p = 0.99; site est = 17.15, SE, 4740.59, p = 0.99)
+```
+
+Ok now lets dig into those effect sizes
+```{r}
+
+## site.id effects ##
+
+# site.id in the conditional
+mod_site_cond_nbin <- glmmTMB(totalpara ~ species,
+  family = "nbinom2",
+  ziformula = ~species + site.id,
+  data = parasite_data
+)
+
+lrtest(mod_combined_nbin, mod_site_cond_nbin) # log likelihood ratio -501.05, p = 5.099e-13
+
+# site.id in the zero
+mod_site_zi_nbin <- glmmTMB(totalpara ~ species + site.id,
+  family = "nbinom2",
+  ziformula = ~species,
+  data = parasite_data
+)
+
+lrtest(mod_combined_nbin, mod_site_zi_nbin) # log likelihood ratio -478.76, p = 0.006
+
+## species effects ##
+
+# species in the conditional
+mod_sp_cond_nbin <- glmmTMB(totalpara ~ site.id,
+  family = "nbinom2",
+  ziformula = ~species + site.id,
+  data = parasite_data
+)
+
+lrtest(mod_combined_nbin, mod_sp_cond_nbin) # log likelihood ratio -474.99, p = 0.85
+
+# species in the zero
+mod_sp_zi_nbin <- glmmTMB(totalpara ~ species + site.id,
+  family = "nbinom2",
+  ziformula = ~site.id,
+  data = parasite_data
+)
+
+lrtest(mod_combined_nbin, mod_sp_zi_nbin) # log likelihood ratio -479.10, p = 0.004
+```
+
+And now we evaluate model fit with the performance package
+```{r}
+model_performance(mod_combined_nbin)
+```
+
+Now, let's convert those log odds for the zero-inflated portion of the model into normal odds using exp(log odds).
+```{r}
+# Species:Sailfin
+exp(19.80) # 397219666
+exp(17.15) # 28064051
+```
+
+Hmm, those values seem way too high. Let's look at a contingency table.
+```{r}
+# summary of after startle behavior
+parasite_data$infected <- parasite_data$totalpara > 0
+table(parasite_data$species, parasite_data$infected)
+```
+|species     | infected | not infected| proportion infected |
+|:-----------|---------:|------------:|--------------------:|
+|P. formosa  | 57       | 12          | 0.826087            |
+|P. latipinna| 40       | 19          | 0.6779661           |
+
+#### Running those models "by hand"
+So, the conversion from log odds to odds says that Amazons are 397219666 times more likely to have a single parasite than Sailfins... that doesn't seem right, considering the contingency table above. SO, I'm going to rerun those models "by hand".
+
+Let's run a zero inflated negative binomial model in two parts.
+
+First, the count model.
+```{r}
+# filtering data to exclude zeros
+parasite_data_nozeros <- parasite_data %>% 
+  filter(totalpara > 0)
+
+# negative binomial model with filtered data
+parasite_count_mod <- glm.nb(totalpara ~ species + site.id,
+                          data = parasite_data_nozeros)
+summary(parasite_count_mod)
+```
+
+This looks reasonably similar to the full zinb model I ran earlier.
+
+Now let's look at the zeroinf model.
+```{r}
+# make column with binary value for infection status
+parasite_data$binary.status <- as.integer(parasite_data$infected)
+
+# now, the zeroinflated model
+parasite_zeroinf_mod <- glm.nb(binary.status ~ species + site.id,
+                          data = parasite_data)
+
+summary(parasite_zeroinf_mod)
+```
+
+
+#### Brownsville
+Now, let's essentially repeat that analysis with just the Brownsville site.
+```{r}
+## Now, just with the Brownsville site ##
+
+# filter data to just Brownsville
+parasite_data_br <- parasite_data %>%
+  filter(site.id == "Brownsville")
+
+# species model
+mod_para_species_br <- glmmTMB(totalpara ~ species,
+  family = "nbinom2",
+  ziformula = ~species,
+  data = parasite_data_br
+)
+
+summary(mod_para_species_br) # yep, no significant species differences
+
+# conditional model without species
+mod_para_sp_cond_br <- glmmTMB(totalpara ~ 1,
+  family = "nbinom2",
+  ziformula = ~species,
+  data = parasite_data_br
+)
+
+lrtest(mod_para_species_br, mod_para_sp_cond_br) # LRT = -217.94, p = 0.468
+
+# zeroinf model without species
+mod_para_sp_zi_br <- glmmTMB(totalpara ~ species,
+  family = "nbinom2",
+  ziformula = ~1,
+  data = parasite_data_br
+)
+
+lrtest(mod_para_species_br, mod_para_sp_zi_br) # LRT = -218.26, p = 0.28
+```
+
+And now we evaluate model fit with the performance package
+```{r}
+model_performance(mod_para_species_br)
+```
+
+#### Weslaco
+Now, let's essentially repeat that analysis with just the Weslaco site.
+```{r}
+## Now, just with the WESLACO site ##
+
+# filter data to just Weslaco
+parasite_data_wes <- parasite_data %>%
+  filter(site.id == "Weslaco")
+
+# Weslaco model
+mod_para_species_wes <- glmmTMB(totalpara ~ species,
+  family = "nbinom2",
+  ziformula = ~species,
+  data = parasite_data_wes
+)
+
+summary(mod_para_species_wes)
+
+# conditional no species model
+mod_para_sp_cond_wes <- glmmTMB(totalpara ~ 1,
+  family = "nbinom2",
+  ziformula = ~species,
+  data = parasite_data_wes
+)
+
+lrtest(mod_para_species_wes, mod_para_sp_cond_wes) # LRT = -252.26, p = 0.981, no significance, suggesting that the species effect is indistinguishable from our null
+
+# zeroinf no species model
+mod_para_sp_zi_wes <- glmmTMB(totalpara ~ species,
+  family = "nbinom2",
+  ziformula = ~1,
+  data = parasite_data_wes
+)
+
+lrtest(mod_para_species_wes, mod_para_sp_zi_wes) # LRT = -254.36, p = 0.040
+
+```
+
+And now we evaluate model fit with the performance package
+```{r}
+model_performance(mod_para_species_wes)
+```
+
+### Behavior
+
+#### Time
+Ok now we'd need to see if behavior overall, before the stimulus, and after the stimulus differs between species and parasite load. We may have to just look at one site, Weslaco since the data is more balanced between species there.
+
+Let's look at the time spent in the open after the startle stimulus, as that is the most relevant behavioral metric (since parasites can affect anti-pred behavior, like swimming in the open)
+
+```{r}
+# FULL model, with three-way interaction
+mod_beh_full <- lm(total.time.open.after ~ species * site.id * totalpara + standard.length,
+                   data = all_data)
+
+# to run all the tests in DHARMa, you first have to simulate your residuals
+sim.mod_beh <- DHARMa::simulateResiduals(mod_beh_full)
+
+# then you can plot them
+plot(sim.mod_beh) # these both look not great
+
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.mod_beh) # dispersion looks ok, but the QQ plot is bad and outlier test is significant
+
+# yes we can see that the data is super zero inflated
+DHARMa::testZeroInflation(sim.mod_beh) # yep, zero inflated
+
+```
+
+Ok now let's try to fit some different models.
+```{r}
+mod_beh_poisson <- glmmTMB(total.time.open.after ~ species * site.id * totalpara + standard.length,
+  family = "poisson",
+  ziformula = ~.,
+  data = all_data
+)
+
+mod_beh_nbin <- glmmTMB(total.time.open.after ~ species * site.id * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = all_data
+)
+
+#
+check_overdispersion(mod_beh_poisson) # data is over dispersed
+check_overdispersion(mod_beh_nbin) # data is not over dispersed
+lrtest(mod_beh_poisson, mod_beh_nbin) # there is a sig difference between the two
+# checking AIC
+anova(mod_beh_poisson, mod_beh_nbin) # nbin model is much lower
+```
+
+Ok, let's move forward with the nbin model. Time for some backwards model selection.
+```{r}
+# interaction model
+mod_beh_nbin <- glmmTMB(total.time.open.after ~ species * site.id * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~species * site.id * totalpara + standard.length,
+  data = all_data
+)
+
+# removing species interaction
+mod_spcomb_nbin <- glmmTMB(total.time.open.after ~ species + site.id * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~species + site.id * totalpara + standard.length,
+  data = all_data
+)
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_beh_nbin, mod_spcomb_nbin) # marginal difference, so let's dig into the conditional vs zero inflated
+
+# no species interaction in conditional
+mod_spcomb_cond_nbin <- glmmTMB(total.time.open.after ~ species + site.id * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~species * site.id * totalpara + standard.length,
+  data = all_data
+)
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_beh_nbin, mod_spcomb_cond_nbin) # no diff, let's see how the zi does
+
+# no species interaction in zeroinf
+mod_spcomb_zi_nbin <- glmmTMB(total.time.open.after ~ species * site.id * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~species + site.id * totalpara + standard.length,
+  data = all_data
+)
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_beh_nbin, mod_spcomb_zi_nbin) # no diff, so let's move on with removing interactions
+
+# combined model
+mod_beh_combined_nbin <- glmmTMB(total.time.open.after ~ species + site.id + totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~species + site.id + totalpara + standard.length,
+  data = all_data
+)
+
+# test species effect
+lrtest(mod_beh_nbin, mod_beh_combined_nbin) # No difference, so let's see how the combined does compared to a reduced model
+
+# no length
+mod_beh_nolength_nbin <- glmmTMB(total.time.open.after ~ species + site.id + totalpara,
+  family = "nbinom2",
+  ziformula = ~species + site.id + totalpara,
+  data = all_data
+)
+
+# test length effect
+lrtest(mod_beh_nolength_nbin, mod_beh_combined_nbin) # no diff, so let's stick with the no length model
+```
+
+Ok so we're moving forward with a model without interactions, including site, species, and total parasites as predictors, but not including length. Let's check those assumptions.
+```{r}
+# checking assumptions for the combined, no length model
+# First we have to simulate your residuals
+sim.output <- DHARMa::simulateResiduals(mod_beh_nolength_nbin)
+
+# then you can plot them
+plot(sim.output) # these look pretty good!
+
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.output) # nice!
+
+# from poking around, it seems like estimating overdispersion is how we evaluate goodness of fit (versus an r-squared). Not sure if that is the correct move, but here we go. I also used this earlier on to evaluate whether I should use a negbin or poisson.
+check_overdispersion(mod_beh_nolength_nbin) # no overdispersion detected. dispersion ratio = 0.849, p = 0.656
+```
+
+So, what are the results?
+```{r}
+summary(mod_beh_nolength_nbin) # species and site are significant predictors of any time spent in the open, but not the number of parasites. Neat!
+```
+
+DROPPING THIS SECTION! Let's get those effect sizes.
+```{r}
+# ## site.id ##
+# 
+# # no site.id in conditional
+# mod_beh_site_cond_nbin <- glmmTMB(total.time.open.after ~ species + totalpara,
+#   family = "nbinom2",
+#   ziformula = ~species + site.id + totalpara,
+#   data = all_data
+# )
+# 
+# lrtest(mod_beh_nolength_nbin, mod_beh_site_cond_nbin) # LogLik = -488.29, p = 0.072
+# 
+# # no site.id in zeroinf
+# mod_beh_site_zi_nbin <- glmmTMB(total.time.open.after ~ species + site.id + totalpara,
+#   family = "nbinom2",
+#   ziformula = ~species + totalpara,
+#   data = all_data
+# )
+# 
+# lrtest(mod_beh_nolength_nbin, mod_beh_site_zi_nbin) # LogLik = -489.01, p = 0.031
+# 
+# ## species ##
+# 
+# # no species in conditional
+# mod_beh_sp_cond_nbin <- glmmTMB(total.time.open.after ~ site.id + totalpara,
+#   family = "nbinom2",
+#   ziformula = ~species + site.id + totalpara,
+#   data = all_data
+# )
+# 
+# lrtest(mod_beh_nolength_nbin, mod_beh_sp_cond_nbin) # LogLik = -487.34, p = 0.248
+# 
+# # no species in zeroinf
+# mod_beh_sp_zi_nbin <- glmmTMB(total.time.open.after ~ species + site.id + totalpara,
+#   family = "nbinom2",
+#   ziformula = ~site.id + totalpara,
+#   data = all_data
+# )
+# 
+# lrtest(mod_beh_nolength_nbin, mod_beh_sp_zi_nbin) # LogLik = -492.31, p = 0.0008
+# 
+# ## totalpara ##
+# 
+# # no totalpara in conditional
+# mod_beh_para_cond_nbin <- glmmTMB(total.time.open.after ~ species + site.id,
+#   family = "nbinom2",
+#   ziformula = ~species + site.id + totalpara,
+#   data = all_data
+# )
+# 
+# lrtest(mod_beh_nolength_nbin, mod_beh_para_cond_nbin) # LogLik = -487.94, p = 0.112
+# 
+# # no totalpara in zeroinf
+# mod_beh_para_zi_nbin <- glmmTMB(total.time.open.after ~ species + site.id + totalpara,
+#   family = "nbinom2", # hmm, the warnings we get here do not happen if we use a poisson dist
+#   ziformula = ~species + site.id,
+#   control = glmmTMBControl(optimizer=optim,
+#                optArgs=list(method="BFGS")),
+#   data = all_data
+# )
+# # model convergence error!
+# 
+# lrtest(mod_beh_nolength_nbin, mod_beh_para_zi_nbin) # missing values due to model convergence problem. Need to extract the log likelihood "manually"
+# 
+# lr_nolength <- mod_beh_nolength_nbin$fit$objective # log likelihood = 486.68
+# lr_nopara_zi <- mod_beh_para_zi_nbin$fit$objective # log likelihood = 532.01
+# 
+# lrtest <- 2*(lr_nopara_zi - lr_nolength) # chi-sq = 90.68
+# pchisq <- pchisq(90.68, # chi-sq value
+#        1,     # degrees of freedom
+#        lower.tail=FALSE)
+# pchisq # p = 1.689e-21
+```
+
+And now we evaluate model fit with the performance package
+```{r}
+model_performance(mod_beh_nolength_nbin)
+```
+
+##### Brownsville
+Now let's repeat that analysis with just the Brownsville site.
+
+Let's create a Brownsville-only dataset.
+```{r}
+br_data <- all_data %>% 
+  filter(site.id == "Brownsville")
+```
+
+Let's see how a basic linear model fairs.
+```{r}
+# FULL model, with three-way interaction
+mod_beh_br <- lm(total.time.open.after ~ species * totalpara + standard.length,
+                   data = br_data)
+
+# to run all the tests in DHARMa, you first have to simulate your residuals
+sim.mod_beh_br <- DHARMa::simulateResiduals(mod_beh_br)
+
+# then you can plot them
+plot(sim.mod_beh_br) # these both look not great
+
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.mod_beh_br) # dispersion and outlier look ok, but the QQ plot is bad
+
+# yes we can see that the data is super zero inflated
+DHARMa::testZeroInflation(sim.mod_beh_br) # yep, zero inflated
+```
+
+Ok now let's try to fit some different models.
+```{r}
+mod_beh_br_poisson <- glmmTMB(total.time.open.after ~ species * totalpara + standard.length,
+  family = "poisson",
+  ziformula = ~.,
+  data = br_data
+)
+
+mod_beh_br_nbin <- glmmTMB(total.time.open.after ~ species * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = br_data
+)
+
+#
+check_overdispersion(mod_beh_br_poisson) # data is over dispersed
+check_overdispersion(mod_beh_br_nbin) # data is not over dispersed
+lrtest(mod_beh_br_poisson, mod_beh_br_nbin) # there is a sig difference between the two
+# checking AIC
+anova(mod_beh_br_poisson, mod_beh_br_nbin) # nbin model is much lower
+```
+
+Let's move forward with the nbin model. Time for some backwards model selection.
+```{r}
+# interaction model
+mod_beh_br_nbin <- glmmTMB(total.time.open.after ~ species * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = br_data
+)
+
+# removing species interaction
+mod_spcomb_br_nbin <- glmmTMB(total.time.open.after ~ species + totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = br_data
+)
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_beh_br_nbin, mod_spcomb_br_nbin) # no difference, so let's start dropping terms
+
+# no length
+mod_beh_nolength_br_nbin <- glmmTMB(total.time.open.after ~ species + totalpara,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = br_data
+)
+
+# test length effect
+lrtest(mod_beh_nolength_br_nbin, mod_spcomb_br_nbin) # no sig diff, let's drop length
+```
+
+So we're moving forward with a model without interactions, including species and total parasites as predictors, but not including length. Let's check those assumptions.
+```{r}
+# checking assumptions for the combined, no length model
+# First we have to simulate your residuals
+sim.output <- DHARMa::simulateResiduals(mod_beh_nolength_br_nbin)
+
+# then you can plot them
+plot(sim.output) # these look pretty good!
+
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.output) # nice!
+
+# let's check overdispersion
+check_overdispersion(mod_beh_nolength_br_nbin) # no overdispersion detected. dispersion ratio = 0.836, p = 0.952
+```
+
+So, what are the results?
+```{r}
+summary(mod_beh_nolength_br_nbin) # no sig effects. Total para is marginally significant in the conditional model, and species is marginally significant in the zero-inf model.
+```
+
+And now we evaluate model fit with the performance package
+```{r}
+model_performance(mod_beh_nolength_br_nbin)
+```
+
+##### Weslaco
+One more time! With Weslaco.
+
+Let's create a Weslaco-only dataset.
+```{r}
+wes_data <- all_data %>% 
+  filter(site.id == "Weslaco")
+```
+
+```{r}
+# FULL model, with three-way interaction
+mod_beh_wes <- lm(total.time.open.after ~ species * totalpara + standard.length,
+                   data = wes_data)
+
+# to run all the tests in DHARMa, you first have to simulate your residuals
+sim.mod_beh_wes <- DHARMa::simulateResiduals(mod_beh_wes)
+
+# then you can plot them
+plot(sim.mod_beh_wes) # all look ok
+
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.mod_beh_wes) # all ok
+
+# yes we can see that the data is super zero inflated
+DHARMa::testZeroInflation(sim.mod_beh_wes) # yep, zero inflated
+```
+
+Ok now let's try to fit some different models.
+```{r}
+mod_beh_wes_poisson <- glmmTMB(total.time.open.after ~ species * totalpara + standard.length,
+  family = "poisson",
+  ziformula = ~.,
+  data = wes_data
+)
+
+mod_beh_wes_nbin <- glmmTMB(total.time.open.after ~ species * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = wes_data
+)
+
+#
+check_overdispersion(mod_beh_wes_poisson) # data is over dispersed
+check_overdispersion(mod_beh_wes_nbin) # data is not over dispersed
+lrtest(mod_beh_wes_poisson, mod_beh_wes_nbin) # there is a sig difference between the two
+# checking AIC
+anova(mod_beh_wes_poisson, mod_beh_wes_nbin) # nbin model is much lower
+```
+
+Ok, let's move forward with the nbin model. Time for some backwards model selection.
+```{r}
+# interaction model
+mod_beh_wes_nbin <- glmmTMB(total.time.open.after ~ species * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = wes_data
+)
+
+# removing species interaction
+mod_spcomb_wes_nbin <- glmmTMB(total.time.open.after ~ species + totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = wes_data
+)
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_beh_wes_nbin, mod_spcomb_wes_nbin) # sig difference, so let's keep the interaction but try dropping terms
+
+# no length
+mod_beh_nolength_wes_nbin <- glmmTMB(total.time.open.after ~ species * totalpara,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = wes_data
+)
+
+# test length effect
+lrtest(mod_beh_nolength_wes_nbin, mod_beh_wes_nbin) # no sig diff, let's drop length
+```
+
+Ok so we're moving forward with a model with an interaction between species and total parasites, but not including length. Let's check those assumptions.
+```{r}
+# checking assumptions for the combined, no length model
+# First we have to simulate your residuals
+sim.output <- DHARMa::simulateResiduals(mod_beh_nolength_wes_nbin)
+
+# then you can plot them
+plot(sim.output) # these look pretty good!
+
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.output) # nice!
+
+# let's check overdispersion
+check_overdispersion(mod_beh_nolength_wes_nbin) # no overdispersion detected. dispersion ratio = 0.697, p = 0.408
+```
+
+So, what are the results?
+```{r}
+summary(mod_beh_nolength_wes_nbin) # no sig effects in conditional model. Species and total para are significant in the zero inflation model.
+```
+
+And now we evaluate model fit with the performance package
+```{r}
+model_performance(mod_beh_nolength_wes_nbin)
+```
+
+#### Switching
+Let's try a linear model.
+```{r}
+mod_switch_full <- lm(total.behavior.switches.after ~ species * site.id * totalpara + standard.length,
+                      data = all_data)
+
+# to run all the tests in DHARMa, you first have to simulate your residuals
+sim.mod_switch <- DHARMa::simulateResiduals(mod_switch_full)
+
+# then you can plot them
+plot(sim.mod_switch) # these both look not great
+
+# gives you a bunch of tests of dispersion etc
+DHARMa::testResiduals(sim.mod_switch) # dispersion and outlier look ok, but the QQ plot is bad
+
+# yes we can see that the data is super zero inflated
+DHARMa::testZeroInflation(sim.mod_switch) # zero inflated
+```
+
+It was zero inflated, so let's try some other model types.
+```{r}
+mod_switch_poisson <- glmmTMB(total.behavior.switches.after ~ species * site.id * totalpara + standard.length,
+  family = "poisson",
+  ziformula = ~.,
+  data = all_data
+) # warning about Hessian
+
+mod_switch_nbin <- glmmTMB(total.behavior.switches.after ~ species * site.id * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = all_data
+) # no warning
+
+# let's compare
+check_overdispersion(mod_switch_poisson) # data is over dispersed
+check_overdispersion(mod_switch_nbin) # data is not over dispersed
+lrtest(mod_switch_poisson, mod_switch_nbin) # there is a sig difference between the two
+# checking AIC
+anova(mod_switch_poisson, mod_switch_nbin) # nbin model is much lower
+```
+
+Ok, let's move forward with the nbin model and some backwards model selection.
+```{r}
+# removing species interaction
+mod_spcomb_switch_nbin <- glmmTMB(total.behavior.switches.after ~ species + site.id * totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = all_data
+)
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_switch_nbin, mod_spcomb_switch_nbin) # no difference, so let's try removing all interactions
+
+# combined model
+mod_switch_combined_nbin <- glmmTMB(total.behavior.switches.after ~ species + site.id + totalpara + standard.length,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = all_data
+)
+
+# test species effect
+lrtest(mod_switch_nbin, mod_switch_combined_nbin) # No difference, so let's see how the combined does compared to a reduced model
+
+# no length
+mod_switch_nolength_nbin <- glmmTMB(total.behavior.switches.after ~ species + site.id + totalpara,
+  family = "nbinom2",
+  ziformula = ~.,
+  data = all_data
+)
+
+# test length effect
+lrtest(mod_switch_nolength_nbin, mod_switch_combined_nbin) # marginally sig, but we don't want to remove any of these other terms, so we're stopping here
+```
+
+Let's look at the summary.
+```{r}
+summary(mod_switch_nolength_nbin) # nothing sig in the conditional model, but species and site sig in the zeroinfl portion
+```
+
+And now we evaluate model fit with the performance package
+```{r}
+model_performance(mod_switch_nolength_nbin)
+```
+
+## Figures
+
+### Parasites
+
+Let's create a figure that shows the difference in parasite loads between sites and species.
+```{r}
+# capping the dataset so that all values over 100 are equal to 101
+parasite_data$totalpara_capped <- pmin(parasite_data$totalpara, 100)
+
+# also trying a log frequency transformation
+parasite_data_freq <- parasite_data %>% 
+  group_by(species, site.id) %>% 
+  count(totalpara, name = "freq") %>% 
+  mutate(log_freq = log(freq))
+
+# making the brownsville histogram
+para_br_hist <- parasite_data %>% 
+  filter(site.id == "Brownsville") %>% 
+  ggplot(mapping = aes(totalpara_capped, fill = species)) +
+  geom_histogram(position = "identity",
+                 alpha = 0.5,
+                 binwidth = 1) +
+  facet_wrap(vars(site.id)) +
+  labs(x = "Number of parasites",
+       y = "Frequency") +
+  coord_cartesian(ylim = c(0, 20)) +
+  scale_fill_discrete(name = "Species") +
+  scale_x_continuous(breaks = c(seq(0, 99, 20), 100),
+                     labels = c(seq(0, 99, 20), "\u2265100")) +
+  theme_classic()
+para_br_hist
+
+# save it
+ggsave("para_br_hist.jpg", width = 6, height = 2)
+
+para_wes_hist <- parasite_data %>% 
+  filter(site.id == "Weslaco") %>% 
+  ggplot(mapping = aes(totalpara_capped, fill = species)) +
+  geom_histogram(position = "identity",
+                 alpha = 0.5,
+                 binwidth = 1) +
+  facet_wrap(vars(site.id)) +
+  labs(x = "Number of parasites",
+       y = "Frequency") +
+  coord_cartesian(ylim = c(0, 20)) +
+  scale_fill_discrete(name = "Species") +
+  scale_x_continuous(breaks = c(seq(0, 99, 20), 100),
+                     labels = c(seq(0, 99, 20), "\u2265100")) +
+  theme_classic()
+para_wes_hist
+
+# save it
+ggsave("para_wes_hist.jpg", width = 6, height = 2)
+```
+
+Graph showing the proportion of fish with and without parasites.
+```{r}
+# create a new column for binary parasite presence/absence
+parasite_data$para_binary <- ifelse(parasite_data$totalpara == 0,0,1)
+
+# summarize data
+parasite_data_sum <- parasite_data %>%
+  group_by(species, site.id) %>%
+  summarize(prop_present = mean(para_binary), .groups = "drop")
+
+#plot data
+ggplot(parasite_data_sum, aes(x = site.id, y = prop_present, fill = species)) +
+  geom_col(position = "dodge",
+           alpha = 0.5) +
+  labs(y = "Proportion of fish with parasites", x = "Site") +
+  scale_y_continuous(limits = c(0,1)) +
+  theme_classic()
+
+# ggplot(parasite_data, aes(x = species, fill = factor(para_binary))) +
+#   geom_bar(position = "fill") +
+#   labs(fill = "Binary", y = "Proportion of fish with parasites") +
+#   facet_wrap(~site.id) +
+#   theme_minimal()
+
+# save it
+ggsave("para_prop.jpg", width = 5, height = 4)
+```
+
+### Behavior
+
+Let's look at the difference in average behavior before/after by site.
+
+```{r}
+beh_site_boxplot <- all_data_long %>% 
+  filter(prop.type != "prop.open.after") %>% 
+  ggplot(mapping = aes(
+    x = species,
+    y = proportion,
+    fill = species)) +
+  geom_boxplot(aes(alpha = 0.25)) +
+  geom_jitter(aes(alpha = 0.25)) +
+  facet_wrap(vars(site.id)) +
+  labs(x = "",
+       y = "Proportion of time in the open after cue") +
+  scale_fill_discrete(name = "") +
+  scale_alpha(guide = "none") +
+  theme_classic()
+beh_site_boxplot
+
+# save it
+ggsave("beh_site_boxplot.jpg", width = 5, height = 3)
+
+beh_sp_boxplot <- all_data_long %>% 
+  filter(prop.type != "prop.open") %>% 
+  ggplot(mapping = aes(
+    x = species,
+    y = proportion,
+    fill = species)) +
+  geom_boxplot() +
+  geom_jitter(aes(alpha = 0.25)) +
+  labs(x = "",
+       y = "Total proportion of time in the open") +
+  scale_fill_discrete(name = "") +
+  scale_alpha(guide = "none") +
+  theme_classic()
+beh_sp_boxplot
+
+# save it
+ggsave("beh_site_boxplot.jpg", width = 5, height = 3)
+
+```
+
+Now, let's look at the relationship between parasite and species by site.
+```{r}
+beh_para_br_lm <- all_data %>% 
+  filter(site.id == "Brownsville") %>% 
+  ggplot(mapping = aes(
+    x = totalpara,
+    y = total.time.open.after,
+    fill = species)) +
+  geom_point(aes(alpha = 0.15)) +
+  geom_smooth(method = 'lm') +
+  facet_wrap(vars(site.id)) +
+  labs(x = "Number of parasites",
+       y = "Time in the open after startle (s)") +
+  coord_cartesian(ylim = c(-210, 610)) +
+  scale_fill_discrete(name = "Species") +
+  scale_alpha(guide = "none") +
+  theme_classic()
+
+# save it
+beh_para_br_lm
+ggsave("beh_para_br_lm.jpg", width = 5, height = 4)
+
+beh_para_wes_lm <- all_data %>% 
+  filter(site.id == "Weslaco") %>% 
+  ggplot(mapping = aes(
+    x = totalpara,
+    y = total.time.open.after,
+    fill = species)) +
+  geom_point(aes(alpha = 0.15)) +
+  geom_smooth(method = 'lm') +
+  facet_wrap(vars(site.id)) +
+  labs(x = "Number of parasites",
+       y = "Time in the open after startle (s)") +
+  coord_cartesian(ylim = c(-210, 610)) +
+  scale_fill_discrete(name = "Species") +
+  scale_alpha(guide = "none") +
+  theme_classic()
+beh_para_wes_lm
+
+# save it
+beh_para_wes_lm
+ggsave("beh_para_wes_lm.jpg", width = 5, height = 4)
+
+beh_para_wes_br <- all_data %>% 
+  filter(site.id == "Brownsville") %>% 
+  ggplot(mapping = aes(
+    x = totalpara,
+    y = total.time.open.after,
+    fill = species)) +
+  geom_point(aes(alpha = 0.25)) +
+  geom_smooth(method = 'lm') +
+  labs(x = "Number of parasites",
+       y = "Time in the open after startle (s)") +
+  scale_fill_discrete(name = "Species") +
+  scale_alpha(guide = "none") +
+  theme_classic()
+beh_para_site_br
+
+beh_para_site_wes <- all_data %>% 
+  filter(site.id == "Weslaco") %>% 
+  ggplot(mapping = aes(
+    x = totalpara,
+    y = total.time.open.after,
+    fill = species)) +
+  geom_point(aes(alpha = 0.25)) +
+  geom_smooth(method = 'lm') +
+  labs(x = "Number of parasites",
+       y = "Time in the open after startle (s)") +
+  scale_fill_discrete(name = "Species") +
+  scale_alpha(guide = "none") +
+  theme_classic()
+beh_para_site_wes
+```
+
+Let's also take a peek at the changes on an individual basis.
+```{r}
+beh_indiv_pf1 <- all_data_long %>% 
+  filter(trial.id == "1") %>% 
+  filter(species == "P. formosa") %>% 
+  filter(prop.type == "prop.open.b4" | prop.type == "prop.open.after") %>% 
+  ggplot(mapping = aes(
+    x = prop.type,
+    y = proportion,
+    group = fish.id)) +
+  geom_line(aes(color = fish.id)) +
+  geom_point()
+beh_indiv_pf1
+
+beh_indiv_pf2 <- all_data_long %>% 
+  filter(trial.id == "2") %>% 
+  filter(species == "P. formosa") %>% 
+  filter(prop.type == "prop.open.b4" | prop.type == "prop.open.after") %>% 
+  ggplot(mapping = aes(
+    x = prop.type,
+    y = proportion,
+    group = fish.id)) +
+  geom_line(aes(color = fish.id)) +
+  geom_point()
+beh_indiv_pf2
+
+beh_indiv_pl1 <- all_data_long %>% 
+  filter(trial.id == "1") %>% 
+  filter(species == "P. latipinna") %>% 
+  filter(prop.type == "prop.open.b4" | prop.type == "prop.open.after") %>% 
+  ggplot(mapping = aes(
+    x = prop.type,
+    y = proportion,
+    group = fish.id)) +
+  geom_line(aes(color = fish.id)) +
+  geom_point()
+beh_indiv_pl1
+
+beh_indiv_pl2 <- all_data_long %>% 
+  filter(trial.id == "2") %>% 
+  filter(species == "P. latipinna") %>% 
+  filter(prop.type == "prop.open.b4" | prop.type == "prop.open.after") %>% 
+  ggplot(mapping = aes(
+    x = prop.type,
+    y = proportion,
+    group = fish.id)) +
+  geom_line(aes(color = fish.id)) +
+  geom_point()
+beh_indiv_pl2
+```
+

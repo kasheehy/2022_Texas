@@ -1,0 +1,1573 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Texas 2022 Analysis},
+  pdfauthor={Kirsten Sheehy},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Texas 2022 Analysis}
+\author{Kirsten Sheehy}
+\date{2024-05-16}
+
+\begin{document}
+\maketitle
+
+\subsection{Overview}\label{overview}
+
+The following script cleans and analyzes data from Texas 2022. Fish were
+collected by Kirsten Sheehy and Jon Aguiñaga. Behavioral data was
+extracted from videos by Nishika Raghavan. Parasite data were collected
+by Jessica Stephenson's lab.
+
+\subsection{Packages to Load}\label{packages-to-load}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(dplyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(readr)}
+\FunctionTok{library}\NormalTok{(tidyr)}
+\FunctionTok{library}\NormalTok{(tibble)}
+\FunctionTok{library}\NormalTok{(lubridate)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'lubridate'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     date, intersect, setdiff, union
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## -- Attaching core tidyverse packages ------------------------ tidyverse 2.0.0 --
+## v forcats 1.0.0     v purrr   1.0.2
+## v ggplot2 3.4.3     v stringr 1.5.0
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+## i Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\FunctionTok{library}\NormalTok{(lme4)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: Matrix
+## 
+## Attaching package: 'Matrix'
+## 
+## The following objects are masked from 'package:tidyr':
+## 
+##     expand, pack, unpack
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(pscl)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'pscl' was built under R version 4.3.2
+\end{verbatim}
+
+\begin{verbatim}
+## Classes and Methods for R originally developed in the
+## Political Science Computational Laboratory
+## Department of Political Science
+## Stanford University (2002-2015),
+## by and under the direction of Simon Jackman.
+## hurdle and zeroinfl functions by Achim Zeileis.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(MASS)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'MASS'
+## 
+## The following object is masked from 'package:dplyr':
+## 
+##     select
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(lmtest)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: zoo
+## 
+## Attaching package: 'zoo'
+## 
+## The following objects are masked from 'package:base':
+## 
+##     as.Date, as.Date.numeric
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(here)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## here() starts at /Users/kirstensheehy/Library/CloudStorage/Box-Box/R/Texas/Texas_2022
+\end{verbatim}
+
+\subsection{Raw Data}\label{raw-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{parasite\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"data"}\NormalTok{, }\StringTok{"copy\_RAW\_parasite\_data\_20230428.csv"}\NormalTok{))}
+\NormalTok{length\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"data"}\NormalTok{, }\StringTok{"copy\_Fish Length Data.csv"}\NormalTok{))}
+\NormalTok{boris\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"data"}\NormalTok{, }\StringTok{"copy\_RAW\_Texas\_BORISdata\_20240515.csv"}\NormalTok{))}
+\NormalTok{ID\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"data"}\NormalTok{, }\StringTok{"copy\_RAW\_trial\_ID\_data\_completeonly\_20240220.csv"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Tidy Data}\label{tidy-data}
+
+\subsubsection{Parasite Data}\label{parasite-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# rename columns to be consistent across data sets}
+\NormalTok{parasite\_data }\OtherTok{\textless{}{-}}\NormalTok{ parasite\_data }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{rename}\NormalTok{(}
+  \AttributeTok{fish.ID =}\NormalTok{ fish.id,}
+  \AttributeTok{site.ID =}\NormalTok{ collection.site}
+\NormalTok{)}
+
+\CommentTok{\# change collection.date and dissection.date to a date format (YYYY{-}MM{-}DD)}
+\NormalTok{parasite\_data}\SpecialCharTok{$}\NormalTok{collection.date }\OtherTok{\textless{}{-}} \FunctionTok{as.Date}\NormalTok{(parasite\_data}\SpecialCharTok{$}\NormalTok{collection.date,}
+  \AttributeTok{format =} \StringTok{"\%m/\%d/\%y"}
+\NormalTok{)}
+\NormalTok{parasite\_data}\SpecialCharTok{$}\NormalTok{dissection.date }\OtherTok{\textless{}{-}} \FunctionTok{as.Date}\NormalTok{(parasite\_data}\SpecialCharTok{$}\NormalTok{dissection.date,}
+  \AttributeTok{format =} \StringTok{"\%m/\%d/\%y"}
+\NormalTok{)}
+
+\CommentTok{\# change site names from abbreviation (WES, BR) to full (Weslaco, Brownsville)}
+\NormalTok{parasite\_data}\SpecialCharTok{$}\NormalTok{site.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"WES"}\NormalTok{, }\StringTok{"Weslaco"}\NormalTok{, parasite\_data}\SpecialCharTok{$}\NormalTok{site.ID)}
+\NormalTok{parasite\_data}\SpecialCharTok{$}\NormalTok{site.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"BR{-}OP"}\NormalTok{, }\StringTok{"Brownsville"}\NormalTok{, parasite\_data}\SpecialCharTok{$}\NormalTok{site.ID)}
+
+\CommentTok{\# note: the \textquotesingle{}OP\textquotesingle{} in Brownsville stands for \textquotesingle{}overpass\textquotesingle{}. We explored several sites}
+\CommentTok{\# in Brownsville, but only used the ones from the overpass for this study, so I}
+\CommentTok{\# simplified the name to just \textquotesingle{}Brownsville\textquotesingle{}.}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Length Data}\label{length-data}
+
+NOTE: I need to go back and check Tommy's labeling and a few
+measurements to be sure they're accurate.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# rename columns to be consistent across data sets}
+\NormalTok{length\_data }\OtherTok{\textless{}{-}}\NormalTok{ length\_data }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{rename}\NormalTok{(}
+  \AttributeTok{file.name =}\NormalTok{ file\_name,}
+  \AttributeTok{date.image =}\NormalTok{ date\_image,}
+  \AttributeTok{site.ID =}\NormalTok{ site\_ID,}
+  \AttributeTok{fish.ID =}\NormalTok{ fish\_ID}
+\NormalTok{)}
+
+\CommentTok{\# remove spaces in fish.IDs}
+\NormalTok{length\_data}\SpecialCharTok{$}\NormalTok{fish.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{" "}\NormalTok{, }\StringTok{""}\NormalTok{, length\_data}\SpecialCharTok{$}\NormalTok{fish.ID)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Boris Data}\label{boris-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# remove unnecessary columns (largely meta data and unused features in BORIS)}
+\NormalTok{boris\_data }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
+  \SpecialCharTok{{-}}\NormalTok{Observation.date, }\CommentTok{\# this is just the day processed in BORIS}
+  \SpecialCharTok{{-}}\NormalTok{Description,}
+  \SpecialCharTok{{-}}\NormalTok{FPS,}
+  \SpecialCharTok{{-}}\NormalTok{Behavioral.category,}
+  \SpecialCharTok{{-}}\NormalTok{Modifiers,}
+  \SpecialCharTok{{-}}\NormalTok{Comment.start,}
+  \SpecialCharTok{{-}}\NormalTok{Comment.stop}
+\NormalTok{)}
+
+\CommentTok{\# rename columns (to match up across data)}
+\NormalTok{boris\_data }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{rename}\NormalTok{(}
+  \AttributeTok{pool =}\NormalTok{ Subject,}
+  \AttributeTok{trial.length =}\NormalTok{ Total.length,}
+  \AttributeTok{start =}\NormalTok{ Start..s.,}
+  \AttributeTok{stop =}\NormalTok{ Stop..s.,}
+  \AttributeTok{duration =}\NormalTok{ Duration..s.}
+\NormalTok{)}
+
+\CommentTok{\# split Media.file into columns to extract file name (could also use}
+\CommentTok{\# Observation.id, but figured this would help avoid typos made in Boris)}
+\NormalTok{boris\_data }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ tidyr}\SpecialCharTok{::}\FunctionTok{separate\_wider\_delim}\NormalTok{(Media.file,}
+  \AttributeTok{delim =} \StringTok{"/"}\NormalTok{,}
+  \AttributeTok{names =} \FunctionTok{c}\NormalTok{(}
+    \StringTok{"file1"}\NormalTok{,}
+    \StringTok{"file2"}\NormalTok{,}
+    \StringTok{"file3"}\NormalTok{,}
+    \StringTok{"file4"}\NormalTok{,}
+    \StringTok{"file5"}\NormalTok{,}
+    \StringTok{"video.ID"}
+\NormalTok{  ),}
+  \AttributeTok{too\_few =} \StringTok{"align\_end"}
+\NormalTok{)}
+
+\CommentTok{\# remove the excess filepath columns}
+\NormalTok{boris\_data }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
+  \SpecialCharTok{{-}}\NormalTok{file1,}
+  \SpecialCharTok{{-}}\NormalTok{file2,}
+  \SpecialCharTok{{-}}\NormalTok{file3,}
+  \SpecialCharTok{{-}}\NormalTok{file4,}
+  \SpecialCharTok{{-}}\NormalTok{file5}
+\NormalTok{)}
+
+\CommentTok{\# video.id (from the file path split above) is the file name of the recording. It decomposes into the site ID, trial number, batch, and date recorded. The following code duplicates the column, then splits the information in video.id into separate columns.}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{video.ID.split }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data}\SpecialCharTok{$}\NormalTok{video.ID}
+\NormalTok{boris\_data }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ tidyr}\SpecialCharTok{::}\FunctionTok{separate\_wider\_delim}\NormalTok{(video.ID.split,}
+  \AttributeTok{delim =} \StringTok{"\_"}\NormalTok{,}
+  \AttributeTok{names =} \FunctionTok{c}\NormalTok{(}
+    \StringTok{"site.ID"}\NormalTok{,}
+    \StringTok{"trial.ID"}\NormalTok{,}
+    \StringTok{"batch.ID"}\NormalTok{,}
+    \StringTok{"trial.date"}
+\NormalTok{  )}
+\NormalTok{)}
+
+\CommentTok{\# remove the file type from the trial.date column}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{trial.date }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{".mov"}\NormalTok{, }\StringTok{""}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{trial.date)}
+
+\CommentTok{\# change trial.date from (YYYYMMDD) to a date (YYYY{-}MM{-}DD)}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{trial.date }\OtherTok{\textless{}{-}} \FunctionTok{as.Date}\NormalTok{(boris\_data}\SpecialCharTok{$}\NormalTok{trial.date, }\AttributeTok{format =} \StringTok{"\%Y\%m\%d"}\NormalTok{)}
+
+\CommentTok{\# remove \textquotesingle{}trial\textquotesingle{} from the data entries for trial.ID}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{trial.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"trial"}\NormalTok{, }\StringTok{""}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{trial.ID)}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{trial.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"trail"}\NormalTok{, }\StringTok{""}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{trial.ID) }\CommentTok{\# had to find a few where this was a typo in the file name}
+
+\CommentTok{\# remove \textquotesingle{}pool\textquotesingle{} from data in pool column}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{pool }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"Pool "}\NormalTok{, }\StringTok{""}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{pool)}
+
+\CommentTok{\# change site ID from abbreviations to full name}
+\CommentTok{\# note: doing them in this order is important}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{site.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"Wes"}\NormalTok{, }\StringTok{"Weslaco"}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{site.ID)}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{site.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"WES"}\NormalTok{, }\StringTok{"Weslaco"}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{site.ID)}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{site.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"BR1"}\NormalTok{, }\StringTok{"Brownsville"}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{site.ID)}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{site.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"BR2"}\NormalTok{, }\StringTok{"Brownsville"}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{site.ID)}
+\NormalTok{boris\_data}\SpecialCharTok{$}\NormalTok{site.ID }\OtherTok{\textless{}{-}} \FunctionTok{gsub}\NormalTok{(}\StringTok{"BR"}\NormalTok{, }\StringTok{"Brownsville"}\NormalTok{, boris\_data}\SpecialCharTok{$}\NormalTok{site.ID)}
+\CommentTok{\# note: there are three entry types for Brownsville: BR, BR1, and BR2}
+\CommentTok{\# need to revisit lab notebook to confirm, but I believe BR1 and BR2}
+\CommentTok{\# are the two sides of the garage (i.e. the two cameras)}
+\end{Highlighting}
+\end{Shaded}
+
+Now that the columns are all formatted correctly, I need to pull out the
+behaviors from the Behavior column into their own, separate columns.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# start by duplicating the \textquotesingle{}Behavior\textquotesingle{} column twice. This will be used to extract start and stop times of the three behaviors (open, hiding, startle).}
+\NormalTok{boris\_data }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{mutate}\NormalTok{(}\AttributeTok{behavior.start =}\NormalTok{ Behavior)}
+
+\NormalTok{boris\_data }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{mutate}\NormalTok{(}\AttributeTok{behavior.stop =}\NormalTok{ Behavior)}
+
+\CommentTok{\# then pivot\_wider with names from behavior.start and values from start}
+\NormalTok{boris\_data\_wide }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  tidyr}\SpecialCharTok{::}\FunctionTok{pivot\_wider}\NormalTok{(}
+    \AttributeTok{names\_from =}\NormalTok{ behavior.start,}
+    \AttributeTok{values\_from =}\NormalTok{ start,}
+    \AttributeTok{names\_prefix =} \StringTok{"start."}
+\NormalTok{  )}
+
+\CommentTok{\# do the same with stop}
+\NormalTok{boris\_data\_wide }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_wide }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  tidyr}\SpecialCharTok{::}\FunctionTok{pivot\_wider}\NormalTok{(}
+    \AttributeTok{names\_from =}\NormalTok{ behavior.stop,}
+    \AttributeTok{values\_from =}\NormalTok{ stop,}
+    \AttributeTok{names\_prefix =} \StringTok{"stop."}
+\NormalTok{  )}
+
+\CommentTok{\# now, I need to get the duration of each behavior using the start and stop times}
+\NormalTok{boris\_data\_wide }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_wide }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  tidyr}\SpecialCharTok{::}\FunctionTok{pivot\_wider}\NormalTok{(}
+    \AttributeTok{names\_from =}\NormalTok{ Behavior,}
+    \AttributeTok{values\_from =}\NormalTok{ duration,}
+    \AttributeTok{names\_prefix =} \StringTok{"duration."}
+\NormalTok{  )}
+
+\CommentTok{\# I\textquotesingle{}ll remove stop\_Startle and duration\_Startle because these are \textquotesingle{}points\textquotesingle{} not \textquotesingle{}states\textquotesingle{} and do not have a duration}
+\NormalTok{boris\_data\_wide }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_wide }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
+  \SpecialCharTok{{-}}\NormalTok{stop.Startle,}
+  \SpecialCharTok{{-}}\NormalTok{duration.Startle}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Now, I need to join the ID\_data and boris\_data\_wide datasets.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# I need a column in both ID\_data and boris\_data\_wide to join by}
+\CommentTok{\# I\textquotesingle{}ll create a new column that merges the file name (which already includes}
+\CommentTok{\# site, trial, and batch) with pool \# for both data sets}
+
+\NormalTok{boris\_data\_wide}\SpecialCharTok{$}\NormalTok{merge.ID }\OtherTok{\textless{}{-}} \FunctionTok{paste}\NormalTok{(}
+\NormalTok{  boris\_data\_wide}\SpecialCharTok{$}\NormalTok{video.ID,}
+\NormalTok{  boris\_data\_wide}\SpecialCharTok{$}\NormalTok{pool}
+\NormalTok{)}
+
+\NormalTok{ID\_data}\SpecialCharTok{$}\NormalTok{merge.ID }\OtherTok{\textless{}{-}} \FunctionTok{paste}\NormalTok{(}
+\NormalTok{  ID\_data}\SpecialCharTok{$}\NormalTok{video.ID,}
+\NormalTok{  ID\_data}\SpecialCharTok{$}\NormalTok{pool}
+\NormalTok{)}
+
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_wide }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(ID\_data, }\AttributeTok{by =} \StringTok{"merge.ID"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Now we tidy the merged data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# remove duplicate columns}
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
+  \SpecialCharTok{{-}}\NormalTok{merge.ID,}
+  \SpecialCharTok{{-}}\NormalTok{video.ID.y,}
+  \SpecialCharTok{{-}}\NormalTok{pool.y,}
+  \SpecialCharTok{{-}}\NormalTok{site.ID.y,}
+  \SpecialCharTok{{-}}\NormalTok{trial.ID.y,}
+  \SpecialCharTok{{-}}\NormalTok{batch.ID.y,}
+  \SpecialCharTok{{-}}\NormalTok{trial.date.y}
+\NormalTok{)}
+
+\CommentTok{\# rename columns to get rid of .x and .y appendages}
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{rename}\NormalTok{(}
+  \AttributeTok{video.ID =}\NormalTok{ video.ID.x,}
+  \AttributeTok{pool =}\NormalTok{ pool.x,}
+  \AttributeTok{site.ID =}\NormalTok{ site.ID.x,}
+  \AttributeTok{trial.ID =}\NormalTok{ trial.ID.x,}
+  \AttributeTok{batch.ID =}\NormalTok{ batch.ID.x,}
+  \AttributeTok{trial.date =}\NormalTok{ trial.date.x}
+\NormalTok{)}
+
+\CommentTok{\# add column for species from fish.ID}
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{species =}\NormalTok{ fish.ID)}
+
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{separate\_wider\_delim}\NormalTok{(species,}
+    \AttributeTok{delim =} \StringTok{"{-}"}\NormalTok{,}
+    \AttributeTok{names =} \FunctionTok{c}\NormalTok{(}
+      \StringTok{"species"}\NormalTok{,}
+      \StringTok{"junk.num"}
+\NormalTok{    )}
+\NormalTok{  )}
+
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{junk.num)}
+
+\CommentTok{\# filling the \textquotesingle{}start.startle\textquotesingle{} column based on fish and trial ID}
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(fish.ID, trial.ID) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{fill}\NormalTok{(start.Startle, }\AttributeTok{.direction =} \StringTok{"downup"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Now, I need to standardize the trial times. When Nishika and I were
+observing, we sometimes recorded behaviors for longer than the
+prescribed 15 minutes. The following code finds the earliest behavior
+observation (either start.hiding or start.open) and then cuts off any
+observations after 15 minutes.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# new columns with the earliest open and hiding value per fish per trial}
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(fish.ID, trial.ID) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{earliest.open =} \FunctionTok{min}\NormalTok{(start.Open, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{),}
+    \AttributeTok{earliest.hiding =} \FunctionTok{min}\NormalTok{(start.Hiding, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: There were 33 warnings in `mutate()`.
+## The first warning was:
+## i In argument: `earliest.open = min(start.Open, na.rm = TRUE)`.
+## i In group 15: `fish.ID = "PF-28"`, `trial.ID = "3"`.
+## Caused by warning in `min()`:
+## ! no non-missing arguments to min; returning Inf
+## i Run `dplyr::last_dplyr_warnings()` to see the 32 remaining warnings.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# creates a trial cutoff time by taking the earliest behavior time (either open or closed)}
+\CommentTok{\# and adding 1200 seconds (20 minutes) to it}
+\NormalTok{boris\_data\_merge }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(fish.ID, trial.ID) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{trial.end =} \FunctionTok{pmin}\NormalTok{(earliest.open, earliest.hiding, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{+} \DecValTok{1200}
+\NormalTok{  )}
+
+\CommentTok{\# now, I need to remove all observations per fish per trial that exceed this cutoff time}
+\NormalTok{boris\_data\_cutoff }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_merge }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(fish.ID, trial.ID) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(start.Open }\SpecialCharTok{\textless{}=}\NormalTok{ trial.end }\SpecialCharTok{|}
+\NormalTok{    start.Hiding }\SpecialCharTok{\textless{}=}\NormalTok{ trial.end)}
+
+\CommentTok{\# now, I need to create an \textquotesingle{}end cap\textquotesingle{} value to replace any \textquotesingle{}stop\textquotesingle{} behaviors}
+\CommentTok{\# basically, I need to close the observation (like in Boris)}
+\CommentTok{\# this also means I\textquotesingle{}ll need to change the \textquotesingle{}duration\textquotesingle{} columns, which are automatically}
+\CommentTok{\# exported from Boris.}
+
+\CommentTok{\# replace stop.Open with trial cutoff if higher than cutoff}
+\NormalTok{boris\_data\_cutoff }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_cutoff }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(fish.ID, trial.ID) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{stop.Open =} \FunctionTok{if\_else}\NormalTok{(stop.Open }\SpecialCharTok{\textgreater{}}\NormalTok{ trial.end, trial.end, stop.Open))}
+
+\CommentTok{\# replace stop.Open with trial cutoff if higher than cutoff}
+\NormalTok{boris\_data\_cutoff }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_cutoff }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(fish.ID, trial.ID) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{stop.Hiding =} \FunctionTok{if\_else}\NormalTok{(stop.Hiding }\SpecialCharTok{\textgreater{}}\NormalTok{ trial.end, trial.end, stop.Hiding))}
+
+\CommentTok{\# now, recalculate duration based on new end times}
+\NormalTok{boris\_data\_cutoff }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_cutoff }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(fish.ID, trial.ID) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{duration.Open =}\NormalTok{ stop.Open }\SpecialCharTok{{-}}\NormalTok{ start.Open)}
+
+\NormalTok{boris\_data\_cutoff }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_cutoff }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(fish.ID, trial.ID) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{duration.Hiding =}\NormalTok{ stop.Hiding }\SpecialCharTok{{-}}\NormalTok{ start.Hiding)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# removing 3rd trial since most fish didn\textquotesingle{}t get three}
+\NormalTok{boris\_data\_cutoff }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_cutoff }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(trial.ID }\SpecialCharTok{==} \StringTok{"1"} \SpecialCharTok{|}
+\NormalTok{    trial.ID }\SpecialCharTok{==} \StringTok{"2"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Now let's create some columns for summary data (e.g.~total time hiding)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# time hiding per trial}
+\NormalTok{total\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_cutoff }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{aggregate}\NormalTok{(}
+\NormalTok{    duration.Hiding }\SpecialCharTok{\textasciitilde{}}\NormalTok{ fish.ID }\SpecialCharTok{+}\NormalTok{ trial.ID,}
+\NormalTok{    sum}
+\NormalTok{  )}
+
+\NormalTok{total\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hiding }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{duplicate.fish.ID =}\NormalTok{ fish.ID)}
+
+\NormalTok{total\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hiding }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{separate\_wider\_delim}\NormalTok{(duplicate.fish.ID,}
+    \AttributeTok{delim =} \StringTok{"{-}"}\NormalTok{,}
+    \AttributeTok{names =} \FunctionTok{c}\NormalTok{(}
+      \StringTok{"species"}\NormalTok{,}
+      \StringTok{"junk.num"}
+\NormalTok{    )}
+\NormalTok{  )}
+
+\NormalTok{total\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hiding }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{junk.num)}
+
+\CommentTok{\# time in open per trial}
+\NormalTok{total\_open }\OtherTok{\textless{}{-}}\NormalTok{ boris\_data\_cutoff }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{aggregate}\NormalTok{(}
+\NormalTok{    duration.Open }\SpecialCharTok{\textasciitilde{}}\NormalTok{ fish.ID }\SpecialCharTok{+}\NormalTok{ trial.ID,}
+\NormalTok{    sum}
+\NormalTok{  )}
+
+\NormalTok{total\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{duplicate.fish.ID =}\NormalTok{ fish.ID)}
+
+\NormalTok{total\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{separate\_wider\_delim}\NormalTok{(duplicate.fish.ID,}
+    \AttributeTok{delim =} \StringTok{"{-}"}\NormalTok{,}
+    \AttributeTok{names =} \FunctionTok{c}\NormalTok{(}
+      \StringTok{"species"}\NormalTok{,}
+      \StringTok{"junk.num"}
+\NormalTok{    )}
+\NormalTok{  )}
+
+\NormalTok{total\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_open }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{junk.num)}
+\end{Highlighting}
+\end{Shaded}
+
+Now, I want to merge total hiding and open per fish per trial.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# I\textquotesingle{}m going to create a column with both fish ID and trial to create a unique}
+\CommentTok{\# row for each fish/trial combination. I\textquotesingle{}ll then use this to join the hiding}
+\CommentTok{\# and open datasets}
+\NormalTok{total\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{unite}\NormalTok{(fish.ID.trial, }\FunctionTok{c}\NormalTok{(fish.ID, trial.ID))}
+
+\NormalTok{total\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hiding }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{unite}\NormalTok{(fish.ID.trial, }\FunctionTok{c}\NormalTok{(fish.ID, trial.ID))}
+
+\CommentTok{\# merge}
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hiding }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(total\_open, }\AttributeTok{by =} \StringTok{"fish.ID.trial"}\NormalTok{)}
+
+\CommentTok{\# get rid of duplicate columns}
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{species.y)}
+
+\CommentTok{\# separate fish ID and trial}
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{separate\_wider\_delim}\NormalTok{(fish.ID.trial,}
+    \AttributeTok{delim =} \StringTok{"\_"}\NormalTok{,}
+    \AttributeTok{names =} \FunctionTok{c}\NormalTok{(}
+      \StringTok{"fish.ID"}\NormalTok{,}
+      \StringTok{"trial"}
+\NormalTok{    )}
+\NormalTok{  )}
+
+\CommentTok{\# and for my own sanity, renaming the species column}
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{rename}\NormalTok{(}\AttributeTok{species =}\NormalTok{ species.x)}
+
+\CommentTok{\# time hiding and open by trial}
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{site.ID =}\NormalTok{ boris\_data\_cutoff}\SpecialCharTok{$}\NormalTok{site.ID[}\FunctionTok{match}\NormalTok{(fish.ID, boris\_data\_cutoff}\SpecialCharTok{$}\NormalTok{fish.ID)])}
+
+\CommentTok{\# hiding and open by trial, joined with parasite and size data}
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(parasite\_data, }\AttributeTok{by =} \StringTok{"fish.ID"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning in left_join(., parasite_data, by = "fish.ID"): Detected an unexpected many-to-many relationship between `x` and `y`.
+## i Row 35 of `x` matches multiple rows in `y`.
+## i Row 29 of `y` matches multiple rows in `x`.
+## i If a many-to-many relationship is expected, set `relationship =
+##   "many-to-many"` to silence this warning.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(length\_data, }\AttributeTok{by =} \StringTok{"fish.ID"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning in left_join(., length_data, by = "fish.ID"): Detected an unexpected many-to-many relationship between `x` and `y`.
+## i Row 24 of `x` matches multiple rows in `y`.
+## i Row 192 of `y` matches multiple rows in `x`.
+## i If a many-to-many relationship is expected, set `relationship =
+##   "many-to-many"` to silence this warning.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
+    \SpecialCharTok{{-}}\NormalTok{site.ID.y,}
+    \SpecialCharTok{{-}}\NormalTok{species.y,}
+    \SpecialCharTok{{-}}\NormalTok{site.ID,}
+    \SpecialCharTok{{-}}\NormalTok{species}
+\NormalTok{  )}
+
+\CommentTok{\# rename columns}
+\NormalTok{total\_hide\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{rename}\NormalTok{(}
+  \AttributeTok{species =}\NormalTok{ species.x,}
+  \AttributeTok{site.ID =}\NormalTok{ site.ID.x,}
+  \AttributeTok{total.parasites =}\NormalTok{ totalpara}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Inspect data}\label{inspect-data}
+
+First, some `dummy checks' to make sure the data make sense
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# fish.IDs}
+\FunctionTok{unique}\NormalTok{(ID\_data}\SpecialCharTok{$}\NormalTok{fish.ID) }\CommentTok{\# 68 unique IDs}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "PF-08BR" "PL-25"   "PF-25B"  "PF-26"   "PF-27"   "PF-28"   "PF-30"  
+##  [8] "PF-31"   "PF-32"   "PF-33"   "PF-35"   "PF-36"   "PF-37"   "PF-38"  
+## [15] "PF-39"   "PF-40"   "PF-46"   "PF-60"   "PF-61"   "PF-62"   "PF-65"  
+## [22] "PL-02"   "PL-05"   "PL-07"   "PL-08"   "PL-09"   "PL-11"   "PL-12"  
+## [29] "PL-13"   "PL-15"   "PL-20"   "PL-21"   "PL-22"   "PL-26"   "PL-28"  
+## [36] "PL-30"   "PL-31"   "PL-32"   "PL-34"   "PL-35"   "PL-37"   "PL-38"  
+## [43] "PL-39"   "PL-41"   "PL-43"   "PL-44"   "PL-45"   "PL-46"   "PL-47"  
+## [50] "PL-48"   "PL-49"   "PL-50"   "PL-51"   "PL-52"   "PL-53"   "PL-54"  
+## [57] "PL-55"   "PL-56"   "PL-57"   "PL-58"   "PL-59"   "PL-60"   "PL-61"  
+## [64] "PL-62"   "PL-63"   "PL-64"   "PL-65"   "PL-66"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{unique}\NormalTok{(boris\_data\_cutoff}\SpecialCharTok{$}\NormalTok{fish.ID) }\CommentTok{\# 69 unique IDs {-}\textgreater{} somehow an NA was introduced?}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "PF-31"   "PL-61"   "PL-46"   "PF-61"   "PF-26"   "PL-57"   NA       
+##  [8] "PL-65"   "PL-52"   "PL-53"   "PL-15"   "PL-64"   "PL-49"   "PF-65"  
+## [15] "PL-58"   "PL-50"   "PF-27"   "PL-12"   "PL-43"   "PL-45"   "PF-33"  
+## [22] "PF-35"   "PL-63"   "PL-21"   "PL-38"   "PF-62"   "PL-44"   "PF-25B" 
+## [29] "PL-05"   "PL-08"   "PL-55"   "PL-07"   "PF-30"   "PL-54"   "PL-13"  
+## [36] "PL-47"   "PF-60"   "PL-25"   "PL-28"   "PL-60"   "PL-09"   "PL-20"  
+## [43] "PL-22"   "PL-66"   "PL-26"   "PF-46"   "PL-56"   "PF-32"   "PL-59"  
+## [50] "PL-51"   "PF-08BR" "PL-41"   "PL-34"   "PL-62"   "PF-28"   "PL-48"  
+## [57] "PL-11"   "PF-39"   "PL-30"   "PL-02"   "PL-35"   "PL-39"   "PL-37"  
+## [64] "PF-36"   "PF-38"   "PL-31"   "PL-32"   "PF-40"   "PF-37"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{unique}\NormalTok{(parasite\_data}\SpecialCharTok{$}\NormalTok{fish.ID)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   [1] "P.formosa"   "P.latipinna" "PF-01"       "PF-02"       "PF-04"      
+##   [6] "PF-05"       "PF-07"       "PF-08"       "PF-09"       "PF-10"      
+##  [11] "PF-11"       "PF-12"       "PF-13"       "PF-14"       "PF-15"      
+##  [16] "PF-16"       "PF-17"       "PF-18"       "PF-19"       "PF-20"      
+##  [21] "PF-21"       "PF-22"       "PF-23"       "PF-24"       "PF-25B"     
+##  [26] "PF-26"       "PF-27"       "PF-28"       "PF-29"       "PF-3"       
+##  [31] "PF-30"       "PF-31"       "PF-32"       "PF-33"       "PF-34"      
+##  [36] "PF-35"       "PF-36"       "PF-37"       "PF-38"       "PF-39"      
+##  [41] "PF-40"       "PF-41"       "PF-42"       "PF-43"       "PF-44"      
+##  [46] "PF-45"       "PF-46"       "PF-47"       "PF-49"       "PF-50"      
+##  [51] "PF-51"       "PF-52"       "PF-53"       "PF-54"       "PF-55"      
+##  [56] "PF-56"       "PF-57"       "PF-58"       "PF-59"       "PF-6"       
+##  [61] "PF-60"       "PF-61"       "PF-62"       "PF-63"       "PF-64"      
+##  [66] "PF-65"       "PL-01"       "PL-02"       "PL-04"       "PL-05"      
+##  [71] "PL-07"       "PL-08"       "PL-09"       "PL-10"       "PL-11"      
+##  [76] "PL-12"       "PL-13"       "PL-14"       "PL-15"       "PL-16"      
+##  [81] "PL-17"       "PL-18"       "PL-19"       "PL-20"       "PL-22"      
+##  [86] "PL-25"       "PL-26"       "PL-27"       "PL-28"       "PL-29"      
+##  [91] "PL-30"       "PL-31"       "PL-32"       "PL-34"       "PL-35"      
+##  [96] "PL-36"       "PL-37"       "PL-38"       "PL-40"       "PL-41"      
+## [101] "PL-42"       "PL-43"       "PL-44"       "PL-46"       "PL-47"      
+## [106] "PL-48"       "PL-49"       "PL-50"       "PL-51"       "PL-52"      
+## [111] "PL-53"       "PL-54"       "PL-55"       "PL-56"       "PL-57"      
+## [116] "PL-58"       "PL-60"       "PL-62"       "PL-63"       "PL-64"      
+## [121] "PL-66"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 121, but 2 are just \textquotesingle{}P.formosa\textquotesingle{} and \textquotesingle{}P.latipina\textquotesingle{} because these are how fish were labeled if they didn\textquotesingle{}t receive trials or if their IDs were unreadable on the labels}
+\end{Highlighting}
+\end{Shaded}
+
+This all makes sense. The number of unique fish IDs from my notebook
+match up with the boris data. There are more parasite fish IDs because
+we sent them fish that didn't necessarily go through trials, in addition
+to trial fish.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# video.ID}
+\FunctionTok{unique}\NormalTok{(boris\_data\_wide}\SpecialCharTok{$}\NormalTok{video.ID) }\CommentTok{\# 36}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "WES_trial1_03_20220808.mov" "WES_trial2_02_20220812.mov"
+##  [3] "WES_trial1_05_20220812.mov" "WES_trial2_01_20220812.mov"
+##  [5] "WES_trial1_04_20220812.mov" "BR_trial1_02_20220808.mov" 
+##  [7] "WES_trial1_03_20220812.mov" "WES_trial3_02_20220809.mov"
+##  [9] "WES_trial2_03_20220812.mov" "BR_trial3_02_20220808.mov" 
+## [11] "WES_trial2_03_20220808.mov" "WES_trial1_02_20220812.mov"
+## [13] "WES_trial1_02_20220808.mov" "BR_trial2_02_20220809.mov" 
+## [15] "BR_trial2_02_20220808.mov"  "BR1_trial2_01_20220810.mov"
+## [17] "BR2_trial2_01_20220810.mov" "WES_trial2_02_20220808.mov"
+## [19] "WES_trial2_01_20220808.mov" "BR_trial2_01_20220808.mov" 
+## [21] "BR_trial1_01_20220808.mov"  "WES_trial2_04_20220812.mov"
+## [23] "WES_trial1_01_20220808.mov" "BR_trial3_01_20220808.mov" 
+## [25] "WES_trial2_05_20220812.mov" "WES_trial3_01_20220809.mov"
+## [27] "BR1_trial3_01_20220810.mov" "BR2_trial3_01_20220810.mov"
+## [29] "BR1_trial3_02_20220810.mov" "BR2_trial3_02_20220810.mov"
+## [31] "BR1_trial1_02_20220810.mov" "BR2_trial2_02_20220810.mov"
+## [33] "Wes_trial1_01_20220812.mov" "BR2_trial1_02_20220810.mov"
+## [35] "BR1_trial1_01_20220810.mov" "BR1_trial2_02_20220810.mov"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{unique}\NormalTok{(ID\_data}\SpecialCharTok{$}\NormalTok{video.ID) }\CommentTok{\# 36}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "BR_trial1_01_20220808.mov"  "BR_trial3_01_20220808.mov" 
+##  [3] "BR_trial2_01_20220808.mov"  "WES_trial1_01_20220808.mov"
+##  [5] "WES_trial2_01_20220808.mov" "WES_trial3_02_20220809.mov"
+##  [7] "WES_trial1_02_20220808.mov" "WES_trial2_02_20220808.mov"
+##  [9] "WES_trial1_03_20220808.mov" "WES_trial2_03_20220808.mov"
+## [11] "WES_trial3_01_20220809.mov" "BR1_trial1_01_20220810.mov"
+## [13] "BR1_trial2_01_20220810.mov" "BR2_trial1_01_20220810.mov"
+## [15] "BR2_trial2_01_20220810.mov" "BR2_trial1_02_20220810.mov"
+## [17] "BR2_trial2_02_20220810.mov" "BR2_trial3_02_20220810.mov"
+## [19] "BR2_trial3_01_20220810.mov" "BR1_trial3_01_20220810.mov"
+## [21] "BR1_trial1_02_20220810.mov" "BR1_trial2_02_20220810.mov"
+## [23] "WES_trial1_04_20220812.mov" "WES_trial2_04_20220812.mov"
+## [25] "WES_trial1_05_20220812.mov" "WES_trial2_05_20220812.mov"
+## [27] "BR_trial1_02_20220808.mov"  "BR_trial2_02_20220808.mov" 
+## [29] "BR_trial3_02_20220808.mov"  "BR1_trial3_02_20220810.mov"
+## [31] "WES_trial1_02_20220812.mov" "WES_trial2_02_20220812.mov"
+## [33] "WES_trial1_03_20220812.mov" "WES_trial2_03_20220812.mov"
+## [35] "Wes_trial1_01_20220812.mov" "WES_trial2_01_20220812.mov"
+\end{verbatim}
+
+This also makes sense. We have the same number of video IDs in the boris
+and ID data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# length data}
+\NormalTok{length\_hist }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(total\_length..mm.)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{()}
+\NormalTok{length\_hist}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 46 rows containing non-finite values (`stat_bin()`).
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-15-1.pdf}
+
+Seems like a fairly normal distribution for length? possibly bimodal?
+
+Let's take a look at the parasite data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# parasite data}
+\NormalTok{parasite\_hist }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(total.parasites)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{()}
+\NormalTok{parasite\_hist}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 15 rows containing non-finite values (`stat_bin()`).
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+Not a normal distribution. No obvious pattern here, besides a lot of
+zeros. Should check to see how this matches up with notes in the
+parasite data about specimen quality).
+
+Let's look at the parasites by species and site.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sp\_parasite\_box }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{fill =}\NormalTok{ species,}
+    \AttributeTok{x =}\NormalTok{ site.ID,}
+    \AttributeTok{y =}\NormalTok{ total.parasites}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+\NormalTok{sp\_parasite\_box}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 15 rows containing non-finite values (`stat_boxplot()`).
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-17-1.pdf}
+
+Ok, so there is a clear pattern of way more parasites in Brownsville,
+generally. It also seems like there may be more parasites on amazons in
+both sites, but we'll see what the stats say.
+
+Now, let's take a look at the shape of the behavior data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# boris\_data, distributions}
+\NormalTok{hiding\_hist }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(duration.Hiding)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{()}
+\NormalTok{hiding\_hist}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-18-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{open\_hist }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(duration.Open)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{()}
+\NormalTok{open\_hist}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 56 rows containing non-finite values (`stat_bin()`).
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-18-2.pdf}
+
+Ok, so it looks like we have a fairly normal distribution for duration
+hiding, with a right skew. For time in the open, we have a floor of
+zero, so a strong left skew. This indicates that many fish spent the
+entire, or most of the trial hiding.
+
+Now, let's take a look at the open vs.~hiding data by species.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# diff in hiding between species}
+\NormalTok{species\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ species,}
+    \AttributeTok{y =}\NormalTok{ duration.Hiding,}
+    \AttributeTok{fill =}\NormalTok{ species}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+\NormalTok{species\_hiding}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-19-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# diff in open between species}
+\NormalTok{species\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ species,}
+    \AttributeTok{y =}\NormalTok{ duration.Open,}
+    \AttributeTok{fill =}\NormalTok{ species}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+\NormalTok{species\_open}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 56 rows containing non-finite values (`stat_boxplot()`).
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-19-2.pdf}
+
+Again, we'll see how the stats pan out, but it looks like Amazons might
+spend less time hiding and more time in the open than sailfins.
+
+\subsection{Models}\label{models}
+
+\subsubsection{Parasites}\label{parasites}
+
+First, I want to see if there is a difference in parasite load between
+Amazons and Sailfins.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# FULL DATA (both sites)}
+
+\CommentTok{\# the parasite count data is zero inflated and overdispersed, so I\textquotesingle{}m going to use a zero{-}inlfated negative binomial distribution (ZINB) with a GLM.}
+
+\CommentTok{\# I\textquotesingle{}m going to use backwards elimination}
+
+\CommentTok{\# interaction model}
+\NormalTok{mod\_para\_interaction }\OtherTok{\textless{}{-}} \FunctionTok{zeroinfl}\NormalTok{(totalpara }\SpecialCharTok{\textasciitilde{}}\NormalTok{ species }\SpecialCharTok{*}\NormalTok{ site.ID,}
+  \AttributeTok{dist =} \StringTok{"negbin"}\NormalTok{,}
+  \AttributeTok{lin =} \StringTok{"logit"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ parasite\_data}
+\NormalTok{)}
+
+\CommentTok{\# combined model}
+\NormalTok{mod\_para\_combined }\OtherTok{\textless{}{-}} \FunctionTok{zeroinfl}\NormalTok{(totalpara }\SpecialCharTok{\textasciitilde{}}\NormalTok{ species }\SpecialCharTok{+}\NormalTok{ site.ID,}
+  \AttributeTok{dist =} \StringTok{"negbin"}\NormalTok{,}
+  \AttributeTok{lin =} \StringTok{"logit"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ parasite\_data}
+\NormalTok{)}
+
+\CommentTok{\# species model}
+\NormalTok{mod\_para\_species }\OtherTok{\textless{}{-}} \FunctionTok{zeroinfl}\NormalTok{(totalpara }\SpecialCharTok{\textasciitilde{}}\NormalTok{ species,}
+  \AttributeTok{dist =} \StringTok{"negbin"}\NormalTok{,}
+  \AttributeTok{lin =} \StringTok{"logit"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ parasite\_data}
+\NormalTok{)}
+
+\CommentTok{\# site model}
+\NormalTok{mod\_para\_site }\OtherTok{\textless{}{-}} \FunctionTok{zeroinfl}\NormalTok{(totalpara }\SpecialCharTok{\textasciitilde{}}\NormalTok{ site.ID,}
+  \AttributeTok{dist =} \StringTok{"negbin"}\NormalTok{,}
+  \AttributeTok{lin =} \StringTok{"logit"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ parasite\_data}
+\NormalTok{)}
+
+\CommentTok{\# test 2{-}way with log likelihood ratio test}
+\FunctionTok{lrtest}\NormalTok{(mod\_para\_combined, mod\_para\_interaction) }\CommentTok{\# no significant difference}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Likelihood ratio test
+## 
+## Model 1: totalpara ~ species + site.ID
+## Model 2: totalpara ~ species * site.ID
+##   #Df  LogLik Df  Chisq Pr(>Chisq)
+## 1   7 -474.97                     
+## 2   9 -474.74  2 0.4566     0.7959
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# test species effect}
+\FunctionTok{lrtest}\NormalTok{(mod\_para\_site, mod\_para\_combined) }\CommentTok{\# the combined model fits the data much better}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Likelihood ratio test
+## 
+## Model 1: totalpara ~ site.ID
+## Model 2: totalpara ~ species + site.ID
+##   #Df  LogLik Df  Chisq Pr(>Chisq)   
+## 1   5 -479.64                        
+## 2   7 -474.97  2 9.3294   0.009422 **
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{lrtest}\NormalTok{(mod\_para\_species, mod\_para\_combined) }\CommentTok{\# same results, the combined model is better}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Likelihood ratio test
+## 
+## Model 1: totalpara ~ species
+## Model 2: totalpara ~ species + site.ID
+##   #Df  LogLik Df  Chisq Pr(>Chisq)    
+## 1   5 -508.08                         
+## 2   7 -474.97  2 66.222   4.17e-15 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(mod\_para\_combined) }\CommentTok{\#but there is no significant effect of species or site.ID}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## zeroinfl(formula = totalpara ~ species + site.ID, data = parasite_data, 
+##     dist = "negbin", link = "logit")
+## 
+## Pearson residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.6715 -0.5375 -0.4157 -0.1079 10.3690 
+## 
+## Count model coefficients (negbin with log link):
+##                  Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)       4.84359    0.31721  15.269  < 2e-16 ***
+## specieslatipinna -0.05922    0.31583  -0.188    0.851    
+## site.IDWeslaco   -2.46194    0.32398  -7.599 2.98e-14 ***
+## Log(theta)       -0.79177    0.13760  -5.754 8.71e-09 ***
+## 
+## Zero-inflation model coefficients (binomial with logit link):
+##                  Estimate Std. Error z value Pr(>|z|)
+## (Intercept)       -16.658     60.684  -0.275    0.784
+## specieslatipinna    9.443     55.611   0.170    0.865
+## site.IDWeslaco      6.742     24.210   0.278    0.781
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+## 
+## Theta = 0.453 
+## Number of iterations in BFGS optimization: 36 
+## Log-likelihood:  -475 on 7 Df
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# Now, just with the WESLACO site \#\#}
+
+\CommentTok{\# filter data to just Weslaco}
+\NormalTok{parasite\_data\_wes }\OtherTok{\textless{}{-}}\NormalTok{ parasite\_data }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(site.ID }\SpecialCharTok{==} \StringTok{"Weslaco"}\NormalTok{)}
+
+\CommentTok{\# species model}
+\NormalTok{mod\_para\_species\_wes }\OtherTok{\textless{}{-}} \FunctionTok{zeroinfl}\NormalTok{(totalpara }\SpecialCharTok{\textasciitilde{}}\NormalTok{ species,}
+  \AttributeTok{dist =} \StringTok{"negbin"}\NormalTok{,}
+  \AttributeTok{lin =} \StringTok{"logit"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ parasite\_data\_wes}
+\NormalTok{)}
+
+\FunctionTok{summary}\NormalTok{(mod\_para\_species\_wes)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## zeroinfl(formula = totalpara ~ species, data = parasite_data_wes, dist = "negbin", 
+##     link = "logit")
+## 
+## Pearson residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.5821 -0.4700 -0.4520 -0.2490  9.5692 
+## 
+## Count model coefficients (negbin with log link):
+##                  Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)       2.33983    0.22557  10.373  < 2e-16 ***
+## specieslatipinna  0.01086    0.46684   0.023    0.981    
+## Log(theta)       -1.04896    0.17916  -5.855 4.77e-09 ***
+## 
+## Zero-inflation model coefficients (binomial with logit link):
+##                  Estimate Std. Error z value Pr(>|z|)
+## (Intercept)        -11.70      81.48  -0.144    0.886
+## specieslatipinna    10.99      81.48   0.135    0.893
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+## 
+## Theta = 0.3503 
+## Number of iterations in BFGS optimization: 36 
+## Log-likelihood: -252.3 on 5 Df
+\end{verbatim}
+
+I want to see if the time spent hiding is predicted by parasites,
+species, trial number, fish.ID or their interaction.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# full model}
+\NormalTok{mod\_full }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(duration.Hiding }\SpecialCharTok{\textasciitilde{}}\NormalTok{ total.parasites }\SpecialCharTok{*}\NormalTok{ species }\SpecialCharTok{*}\NormalTok{ trial }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish.ID),}
+  \AttributeTok{data =}\NormalTok{ total\_hide\_open}
+\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(mod\_full)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: duration.Hiding ~ total.parasites * species * trial + (1 | fish.ID)
+##    Data: total_hide_open
+## 
+## REML criterion at convergence: 2282.1
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -4.3327 -0.2824  0.0098  0.3952  3.6412 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  fish.ID  (Intercept) 32702    180.8   
+##  Residual             14350    119.8   
+## Number of obs: 178, groups:  fish.ID, 60
+## 
+## Fixed effects:
+##                                    Estimate Std. Error t value
+## (Intercept)                       7.094e+02  5.655e+01  12.545
+## total.parasites                   1.217e+00  5.469e-01   2.225
+## speciesPL                         2.821e+02  6.746e+01   4.182
+## trial2                            1.203e+02  4.436e+01   2.711
+## total.parasites:speciesPL        -1.392e+00  7.294e-01  -1.909
+## total.parasites:trial2            5.686e-04  4.278e-01   0.001
+## speciesPL:trial2                 -5.421e+01  5.017e+01  -1.080
+## total.parasites:speciesPL:trial2  2.262e-01  5.671e-01   0.399
+## 
+## Correlation of Fixed Effects:
+##             (Intr) ttl.pr spcsPL trial2 tt.:PL ttl.:2 spPL:2
+## total.prsts -0.451                                          
+## speciesPL   -0.838  0.378                                   
+## trial2      -0.401  0.168  0.336                            
+## ttl.prst:PL  0.338 -0.750 -0.453 -0.126                     
+## ttl.prsts:2  0.168 -0.394 -0.141 -0.443  0.296              
+## spcsPL:trl2  0.355 -0.149 -0.383 -0.884  0.179  0.392       
+## ttl.pr:PL:2 -0.127  0.297  0.173  0.334 -0.452 -0.754 -0.435
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# evaluating assumptions}
+\NormalTok{ggResidpanel}\SpecialCharTok{::}\FunctionTok{resid\_panel}\NormalTok{(mod\_full)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-21-1.pdf}
+Looking at our residual panel, most assumptions look ok! Residuals vs
+predicted might be a bit trumet-y? Q-Q looks nice and linear. Index plot
+is an even scatter. Residual histogram looks pretty normal.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# decompose to two way}
+\NormalTok{mod\_2way }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(duration.Hiding }\SpecialCharTok{\textasciitilde{}}\NormalTok{ total.parasites}\SpecialCharTok{:}\NormalTok{species }\SpecialCharTok{+}\NormalTok{ total.parasites}\SpecialCharTok{:}\NormalTok{trial }\SpecialCharTok{+}\NormalTok{ species}\SpecialCharTok{:}\NormalTok{trial }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish.ID),}
+  \AttributeTok{data =}\NormalTok{ total\_hide\_open}
+\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(mod\_2way)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: duration.Hiding ~ total.parasites:species + total.parasites:trial +  
+##     species:trial + (1 | fish.ID)
+##    Data: total_hide_open
+## 
+## REML criterion at convergence: 2321.1
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -4.8680 -0.2830  0.0408  0.4166  3.8861 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  fish.ID  (Intercept) 39959    199.9   
+##  Residual             15076    122.8   
+## Number of obs: 178, groups:  fish.ID, 60
+## 
+## Fixed effects:
+##                           Estimate Std. Error t value
+## (Intercept)               920.4339    32.4630  28.353
+## total.parasites:speciesPF   0.4140     0.5312   0.779
+## total.parasites:speciesPL   0.1357     0.4662   0.291
+## total.parasites:trial2      0.2954     0.2737   1.080
+## speciesPL:trial2           74.8811    22.4423   3.337
+## 
+## Correlation of Fixed Effects:
+##             (Intr) tt.:PF tt.:PL ttl.:2
+## ttl.prst:PF -0.299                     
+## ttl.prst:PL -0.388  0.208              
+## ttl.prsts:2  0.100 -0.293 -0.384       
+## spcsPL:trl2 -0.247  0.157  0.068 -0.336
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# evaluating assumptions}
+\NormalTok{ggResidpanel}\SpecialCharTok{::}\FunctionTok{resid\_panel}\NormalTok{(mod\_2way)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-22-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{anova}\NormalTok{(mod\_full, mod\_2way)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## refitting model(s) with ML (instead of REML)
+\end{verbatim}
+
+\begin{verbatim}
+## Data: total_hide_open
+## Models:
+## mod_2way: duration.Hiding ~ total.parasites:species + total.parasites:trial + species:trial + (1 | fish.ID)
+## mod_full: duration.Hiding ~ total.parasites * species * trial + (1 | fish.ID)
+##          npar    AIC    BIC  logLik deviance  Chisq Df Pr(>Chisq)    
+## mod_2way    7 2351.3 2373.6 -1168.7   2337.3                         
+## mod_full   10 2337.7 2369.5 -1158.8   2317.7 19.648  3  0.0002008 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+Ok now I'm going to make a plot to disentangle the pairwise interaction
+we've got going on.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# This plots number of parasites vs time spent hiding. Each line represents a species.}
+\CommentTok{\# I\textquotesingle{}ve also split the plot into the two sites: Brownsville and Weslaco.}
+\NormalTok{pairwise\_species\_plot }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{y =}\NormalTok{ duration.Hiding,}
+    \AttributeTok{x =}\NormalTok{ total.parasites,}
+    \AttributeTok{fill =}\NormalTok{ species}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\FunctionTok{vars}\NormalTok{(site.ID))}
+\NormalTok{pairwise\_species\_plot}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `geom_smooth()` using formula = 'y ~ x'
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 15 rows containing non-finite values (`stat_smooth()`).
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-24-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pairwise\_site\_plot }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{y =}\NormalTok{ duration.Hiding,}
+    \AttributeTok{x =}\NormalTok{ total.parasites,}
+    \AttributeTok{fill =}\NormalTok{ site.ID}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\FunctionTok{vars}\NormalTok{(species))}
+\NormalTok{pairwise\_site\_plot}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `geom_smooth()` using formula = 'y ~ x'
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 15 rows containing non-finite values (`stat_smooth()`).
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-24-2.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pairwise\_trial\_plot }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{y =}\NormalTok{ duration.Hiding,}
+    \AttributeTok{x =}\NormalTok{ total.parasites,}
+    \AttributeTok{fill =}\NormalTok{ trial}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{(}\AttributeTok{method =} \StringTok{"lm"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\FunctionTok{vars}\NormalTok{(species))}
+\NormalTok{pairwise\_trial\_plot}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `geom_smooth()` using formula = 'y ~ x'
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 15 rows containing non-finite values (`stat_smooth()`).
+\end{verbatim}
+
+\includegraphics{Texas2022_analysis_files/figure-latex/unnamed-chunk-24-3.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# note from Kate: add raw data points}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{PICK UP HERE}\label{pick-up-here}
+
+Also, check out how long the trials should be and export the
+observations from Boris cut off at that length (25 minutes, I think?).
+Double check that observations that start before the cutoff are assigned
+a new cutoff at the end trial time and not removed or left longer.
+
+\section{SCRAPS}\label{scraps}
+
+\subsubsection{NOTE}\label{note}
+
+There were lots of other plots I made examining site by site or trial by
+trial patterns as well. They are copied below, but have not been
+reviewed/error checked.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# change in hiding over trials by species}
+\NormalTok{trial\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ trial.ID,}
+    \AttributeTok{y =}\NormalTok{ duration\_Hiding,}
+    \AttributeTok{fill =}\NormalTok{ species,}
+    \AttributeTok{dodge =}\NormalTok{ species}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+
+\CommentTok{\# change in hiding over trials by species}
+\NormalTok{trial\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ trial.ID,}
+    \AttributeTok{y =}\NormalTok{ duration\_Open,}
+    \AttributeTok{fill =}\NormalTok{ species,}
+    \AttributeTok{dodge =}\NormalTok{ species}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+
+\CommentTok{\# diff in open between sites}
+\NormalTok{site\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ site.ID.x,}
+    \AttributeTok{y =}\NormalTok{ duration\_Open}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+
+\CommentTok{\# diff in hiding between sites}
+\NormalTok{site\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ site.ID.x,}
+    \AttributeTok{y =}\NormalTok{ duration\_Hiding}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+\CommentTok{\# diff in opn between sites by species}
+\NormalTok{site\_spp\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ site.ID.x,}
+    \AttributeTok{y =}\NormalTok{ duration\_Open,}
+    \AttributeTok{fill =}\NormalTok{ species.x,}
+    \AttributeTok{dodge =}\NormalTok{ species.x}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+
+\CommentTok{\# diff in hiding between sites by species}
+\NormalTok{site\_spp\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ site.ID.x,}
+    \AttributeTok{y =}\NormalTok{ duration\_Hiding,}
+    \AttributeTok{fill =}\NormalTok{ species.x,}
+    \AttributeTok{dodge =}\NormalTok{ species.x}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+
+\CommentTok{\# diff in total parasites by species}
+\NormalTok{parasites\_spp }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ species.x,}
+    \AttributeTok{y =}\NormalTok{ totalpara,}
+    \AttributeTok{fill =}\NormalTok{ species.x}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+
+\CommentTok{\# diff in total parasites by site}
+\NormalTok{parasites\_site }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ site.ID.x,}
+    \AttributeTok{y =}\NormalTok{ totalpara}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+
+\CommentTok{\# diff in total parasites by site and spp}
+\NormalTok{parasites\_site\_spp }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ site.ID.x,}
+    \AttributeTok{y =}\NormalTok{ totalpara,}
+    \AttributeTok{fill =}\NormalTok{ species.x,}
+    \AttributeTok{dodge =}\NormalTok{ species.x}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+
+\CommentTok{\# variation in parasites with open beh}
+\NormalTok{parasites\_open }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ totalpara,}
+    \AttributeTok{y =}\NormalTok{ duration\_Open,}
+    \AttributeTok{color =}\NormalTok{ species.x}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{()}
+
+\CommentTok{\# variation in parasites with hiding beh}
+\NormalTok{parasites\_hiding }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ totalpara,}
+    \AttributeTok{y =}\NormalTok{ duration\_Hiding,}
+    \AttributeTok{fill =}\NormalTok{ species.x}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{()}
+
+\CommentTok{\# avg length at each site by spp.}
+\NormalTok{length\_site }\OtherTok{\textless{}{-}}\NormalTok{ total\_hide\_open }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ site.ID.x,}
+    \AttributeTok{y =}\NormalTok{ total\_length..mm.,}
+    \AttributeTok{fill =}\NormalTok{ species.x,}
+    \AttributeTok{dodge =}\NormalTok{ species.x}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+
+\end{document}

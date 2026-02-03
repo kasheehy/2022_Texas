@@ -1277,11 +1277,9 @@ Now, let's convert those effect sizes for each model into probabilities.
 ## binomial model ##
 
 # Species:Sailfin
-exp(-1.404) # odds 0.2456125
 exp(-1.404)/(1+exp(-1.404))*100 # There is a 19.72% decrease in the likelihood that Sailfins spend any time in the open.
 
 # site:Weslaco
-exp(1.006) # odds 2.734641
 exp(1.006)/(1+exp(1.006))*100 # There is a 73.22% increase in the likelihood that fish from Weslaco spend any time in the open.
 ```
 

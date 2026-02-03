@@ -938,18 +938,16 @@ Now, let's convert those effect sizes for each model into probabilities.
 ## count model, nbin ##
 
 # only site:Weslaco significant
-exp(-2.26) # odds 0.104
+(exp(-2.26)-1)*100 # Fish from Weslaco have 89.56% fewer parasites.
 
 
 ## binomial model ##
 
 # Species:Sailfin
-exp(-1.51) # odds 0.22091
-1/exp(-1.51) # There is a 4.53% decrease in the probability of observing parasites in Sailfins
+exp(-1.51)/(1+exp(-1.51))*100 # Sailfins are 18.09% more likely to have no parasites.
 
 # site:Weslaco
-exp(-2.77) # odds 0.062662
-1/exp(-2.77) # There is a 15.96% decrease in the likelihood of observing parasites in fish from Weslaco.
+exp(-2.77)/(1+exp(-2.77))*100 # Fish from Weslaco are 5.90% more likely to have no parasites.
 ```
 
 #### Brownsville
@@ -1274,19 +1272,17 @@ Now, let's convert those effect sizes for each model into probabilities.
 ## count model ##
 
 # totalpara
-exp(-0.002) # odds 0.998002
-1/exp(-0.002) # For every increase of 1 parasite, there is a 1.00% decrease in the amount of time spent in the open.
+(exp(-0.002)-1)*100 # For every increase of 1 parasite, there is a 0.20% decrease in the amount of time spent in the open.
 
 ## binomial model ##
 
 # Species:Sailfin
 exp(-1.404) # odds 0.2456125
-1/exp(-1.404) # There is a 4.07% decrease in the likelihood that Sailfins spend any time in the open.
-
+exp(-1.404)/(1+exp(-1.404))*100 # There is a 19.72% decrease in the likelihood that Sailfins spend any time in the open.
 
 # site:Weslaco
 exp(1.006) # odds 2.734641
-1/exp(1.006) # There is a 0.36% increase in the likelihood that fish from Weslaco spend any time in the open.
+exp(1.006)/(1+exp(1.006))*100 # There is a 73.22% increase in the likelihood that fish from Weslaco spend any time in the open.
 ```
 
 ##### Brownsville

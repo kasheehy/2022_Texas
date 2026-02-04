@@ -1495,43 +1495,62 @@ Now let's repeat that analysis with just the Brownsville site.
 Let's look at the count model first. We'll filter the data to exclude the zeros. Those will be dealt with in the other, zero inflation model.
 ```{r}
 # filtering data to just brownsville
-br_data <- all_data %>% 
+beh_data_nozeros_br <- beh_data_nozeros %>% 
   filter(site.id == "Brownsville")
 
-# filtering data to exclude zeros
-beh_data_nozeros_br <- br_data %>% 
-  filter(total.time.open.after > 0)
-
 # test which distribution is best
-mod_site_gaussian_br <- glm(total.time.open.after ~ species,
+mod_full_gaussian_br <- glm(total.time.open.after ~ species * totalpara + standard.length,
                         family = gaussian(link = "identity"),
                         data = beh_data_nozeros_br
                         )
 
-mod_site_poisson_br <- glm(total.time.open.after ~ species,
+mod_full_poisson_br <- glm(total.time.open.after ~ species * totalpara + standard.length,
                         family = poisson(link = "log"),
                         data = beh_data_nozeros_br
                         )
 
-mod_site_nbin_br <- glm.nb(total.time.open.after ~ species,
+mod_full_nbin_br <- glm.nb(total.time.open.after ~ species * totalpara + standard.length,
                         data = beh_data_nozeros_br
                         )
 
 # let's compare dispersion
-check_overdispersion(mod_site_gaussian_br) # data is not over dispersed
-check_overdispersion(mod_site_poisson_br) # data is over dispersed
-check_overdispersion(mod_site_nbin_br) # data is not over dispersed
+check_overdispersion(mod_full_gaussian_br) # data is not over dispersed
+check_overdispersion(mod_full_poisson_br) # data is over dispersed
+check_overdispersion(mod_full_nbin_br) # data is not over dispersed
 
-lrtest(mod_site_gaussian_br, mod_site_nbin_br) # there is a sig difference between the two, with nbin having a lower loglik
+lrtest(mod_full_gaussian_br, mod_full_nbin_br) # there is a sig difference between the two, with nbin having a lower loglik
 ```
 
 Ok, so for the count model we'll use a negative binomial distribution.
 
-Let's check those assumptions.
+Now, let's do some backwards model selection for the count model.
+```{r}
+# interaction model
+mod_full_nbin_br <- glm.nb(total.time.open.after ~ species * totalpara + standard.length,
+                        data = beh_data_nozeros_br
+                        )
+
+# dropping length
+mod_nolength_nbin_br <- glm.nb(total.time.open.after ~ species* totalpara,
+                        data = beh_data_nozeros_br
+                        )
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_full_nbin_br, mod_nolength_nbin_br) # no sig difference, so let's drop standard length
+
+# no interaction model
+mod_combined_nbin_br <- glm.nb(total.time.open.after ~ species + totalpara,
+                        data = beh_data_nozeros_br
+                        )
+# test 2-way with log likelihood ratio test
+lrtest(mod_nolength_nbin_br, mod_combined_nbin_br) # no sig difference, so let's go with the simpler, combined model
+```
+
+Ok let's more forward with the combined count model. Let's check those assumptions.
 ```{r}
 # checking assumptions for the combined model
 # First we have to simulate your residuals
-sim.output <- DHARMa::simulateResiduals(mod_site_nbin_br)
+sim.output <- DHARMa::simulateResiduals(mod_combined_nbin_br)
 
 # then you can plot them
 plot(sim.output) # these look fine
@@ -1539,45 +1558,71 @@ plot(sim.output) # these look fine
 # gives you a bunch of tests of dispersion etc
 DHARMa::testResiduals(sim.output) # all look ok
 
-check_overdispersion(mod_site_nbin_br) # no overdispersion detected. dispersion ratio = 0.747 p = 0.824
+check_overdispersion(mod_combined_nbin_br) # no overdispersion detected.
 ```
-
-###### Binary model
-
-Now, let's look at the zero inflated model. We'll need to make a column that turns time in the open into a binary (0 or 1 for no time or some time in the open).
+###### Br Binary model
 ```{r}
-# make column with binary value for infection status
-br_data$binary.status <- ifelse(br_data$total.time.open.after == 0,0,1)
+# filtering data to just brownsville
+all_data_br <- all_data %>% 
+  filter(site.id == "Brownsville")
 
 # now, let's test which distribution is best
 
-mod_site_zi_binom_br <- glm(binary.status ~ species,
+mod_full_zi_binom_br <- glm(binary.status ~ species * totalpara + standard.length,
                          family = binomial(link = "logit"),
-                        data = br_data
+                        data = all_data_br
                         )
 
-mod_site_zi_poisson_br <- glm(binary.status ~ species,
+mod_full_zi_poisson_br <- glm(binary.status ~ species * totalpara + standard.length,
                         family = poisson(link = "log"),
-                        data = br_data
+                        data = all_data_br
                         )
                         
 
-mod_site_zi_nbin_br <- glm.nb(binary.status ~ species,
-                          data = br_data) # warning error about iteration limit indicates data is underdispersed. This is confirmed with the dispersion test below.
+mod_full_zi_nbin_br <- glm.nb(binary.status ~ species * totalpara + standard.length,
+                          data = all_data_br) # warning error about iteration limit indicates data is underdispersed. This is confirmed with the dispersion test below.
 
 # let's compare dispersion
-check_overdispersion(mod_site_zi_binom_br) # data is not over dispersed
-check_overdispersion(mod_site_zi_poisson_br) # data is not over dispersed
-check_overdispersion(mod_site_zi_nbin_br) # data is under dispersed
+check_overdispersion(mod_full_zi_binom_br) # data is not over dispersed
+check_overdispersion(mod_full_zi_poisson_br) # data is not over dispersed
+check_overdispersion(mod_full_zi_nbin_br) # data is under dispersed
 
-lrtest(mod_site_zi_binom_br, mod_site_zi_poisson_br) # significant difference, and the binomial model has a lower log lik
+lrtest(mod_full_zi_binom_br, mod_full_zi_poisson_br) # significant difference, and the binomial model has a lower log lik
 ```
 
 Ok, I'm going to go ahead with the binomial model since that makes more sense here and seems "good enough". Let's check those assumptions.
+
+Now, let's do some backwards model selection for the binomial model.
+```{r}
+# interaction model
+mod_full_zi_binom_br <- glm(binary.status ~ species * totalpara + standard.length,
+                         family = binomial(link = "logit"),
+                        data = all_data_br
+                        )
+# dropping length
+mod_nolength_zi_binom_br <- glm(binary.status ~ species * totalpara,
+                         family = binomial(link = "logit"),
+                        data = all_data_br
+                        )
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_full_zi_binom_br, mod_nolength_zi_binom_br) # no sig difference, so let's go with the simpler, combined model
+
+# no interaction model
+mod_combined_zi_binom_br <- glm(binary.status ~ species + totalpara,
+                         family = binomial(link = "logit"),
+                        data = all_data_br
+                        )
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_nolength_zi_binom_br, mod_combined_zi_binom_br) # no sig difference, so let's go with the simpler, combined model
+```
+
+Ok let's more forward with the combined binomial model. Let's check those assumptions.
 ```{r}
 # checking assumptions for the combined model
 # First we have to simulate your residuals
-sim.output <- DHARMa::simulateResiduals(mod_site_zi_binom_br)
+sim.output <- DHARMa::simulateResiduals(mod_combined_zi_binom_br)
 
 # then you can plot them
 plot(sim.output) # looks ok
@@ -1586,17 +1631,54 @@ plot(sim.output) # looks ok
 DHARMa::testResiduals(sim.output) # looks ok
 
 # check dispersion of combined
-check_overdispersion(mod_site_zi_binom_br) # no overdispersion detected. dispersion ratio = 1.023 p = 0.808
+check_overdispersion(mod_combined_zi_binom_br) # no overdispersion detected. dispersion ratio = 1.012 p = 0.896
 ```
 
-##### Conclusions
+###### Br Conclusions
 Let's take a look at our final models.
 ```{r}
-summary(mod_site_nbin_br) # species not significant (est = 0.3357, SE = 0.42, p = 0.422)
+summary(mod_combined_nbin_br) # species not significant (est = 0.149, SE = 0.464, p = 0.748), total para not significant (est = -.002, SE = 0.001, p = 0.094)
 
-summary(mod_site_zi_binom_br) # species not significant (est = -1.18, SE = 0.64, p = 0.068
+summary(mod_combined_zi_binom_br) # species not significant, total para not significant
 ```
 
+Ok now lets dig into those effect sizes
+```{r}
+
+## count model ##
+
+# species in the count model
+mod_sp_combined_nbin_br <- glm.nb(total.time.open.after ~ totalpara,
+                        data = beh_data_nozeros_br
+                        )
+
+lrtest(mod_combined_nbin_br, mod_sp_combined_nbin_br) # log likelihood ratio -130.90, p = 0.740
+
+# totalpara in the count model
+mod_para_combined_nbin_br <- glm.nb(total.time.open.after ~ species,
+                        data = beh_data_nozeros_br
+                        )
+
+lrtest(mod_combined_nbin_br, mod_para_combined_nbin_br) # log likelihood ratio -131.91, p = 0.144
+
+## binomial model ##
+
+# species in the binomial model
+mod_sp_zi_binom_br <- glm(binary.status ~ totalpara,
+                         family = binomial(link = "logit"),
+                        data = all_data_br
+                        )
+
+lrtest(mod_combined_zi_binom_br, mod_sp_zi_binom_br) # log likelihood ratio -34.031, p = 0.083
+
+# parasites in the binomial model
+mod_para_zi_binom_br <- glm(binary.status ~ species,
+                         family = binomial(link = "logit"),
+                        data = all_data_br
+                        )
+
+lrtest(mod_combined_zi_binom_br, mod_para_zi_binom_br) # log likelihood ratio -32.823, p = 0.439
+```
 ##### Weslaco
 One more time! With Weslaco.
 
@@ -1606,32 +1688,7 @@ wes_data <- all_data %>%
   filter(site.id == "Weslaco")
 ```
 
-Ok now we'd need to see if behavior overall, before the stimulus, and after the stimulus differs between species and parasite load.
-
-Let's look at the time spent in the open after the startle stimulus, as that is the most relevant behavioral metric (since parasites can affect anti-pred behavior, like swimming in the open)
-
-```{r}
-# FULL model, with three-way interaction
-mod_beh_full_wes <- lm(total.time.open.after ~ species * totalpara + standard.length,
-                   data = wes_data)
-
-# to run all the tests in DHARMa, you first have to simulate your residuals
-sim.mod_beh_wes <- DHARMa::simulateResiduals(mod_beh_full_wes)
-
-# then you can plot them
-plot(sim.mod_beh_wes) # these both look not great
-
-# gives you a bunch of tests of dispersion etc
-DHARMa::testResiduals(sim.mod_beh_wes) # dispersion looks ok, but the QQ plot is bad and outlier test is significant
-
-# yes we can see that the data is zero inflated
-DHARMa::testZeroInflation(sim.mod_beh_wes) # yep, zero inflated
-
-```
-
-Ok, so the data is zero inflated. We will need to run two models: a count model that excludes the zeros, and a binomial model that deals with the zeros (zero or greater than zero). So we need to test the fit of different kinds of models (poisson or possibly binomial) for the count model.
-
-##### Count model
+###### Wes Count model
 Let's look at the count model first. We'll filter the data to exclude the zeros. Those will be dealt with in the other, zero inflation model.
 ```{r}
 # filtering data to exclude zeros
@@ -1639,35 +1696,58 @@ beh_data_nozeros_wes <- wes_data %>%
   filter(total.time.open.after > 0)
 
 # test which distribution is best
-mod_site_gaussian_wes <- glm(total.time.open.after ~ species,
+mod_full_gaussian_wes <- glm(total.time.open.after ~ species * totalpara + standard.length,
                         family = gaussian(link = "identity"),
                         data = beh_data_nozeros_wes
                         )
 
-mod_site_poisson_wes <- glm(total.time.open.after ~ species,
+mod_full_poisson_wes <- glm(total.time.open.after ~ species * totalpara + standard.length,
                         family = poisson(link = "log"),
                         data = beh_data_nozeros_wes
                         )
 
-mod_site_nbin_wes <- glm.nb(total.time.open.after ~ species,
+mod_full_nbin_wes <- glm.nb(total.time.open.after ~ species * totalpara + standard.length,
                         data = beh_data_nozeros_wes
                         )
 
 # let's compare dispersion
-check_overdispersion(mod_site_gaussian_wes) # data is not over dispersed
-check_overdispersion(mod_site_poisson_wes) # data is over dispersed
-check_overdispersion(mod_site_nbin_wes) # data is not over dispersed
+check_overdispersion(mod_full_gaussian_wes) # data is not over dispersed
+check_overdispersion(mod_full_poisson_wes) # data is over dispersed
+check_overdispersion(mod_full_nbin_wes) # data is not over dispersed
 
-lrtest(mod_site_gaussian_wes, mod_site_nbin_wes) # there is a sig difference between the two, with nbin having a slightly lower loglik
+lrtest(mod_full_gaussian_wes, mod_full_nbin_wes) # there is a sig difference between the two, with nbin having a lower loglik
 ```
 
 Ok, so for the count model we'll use a negative binomial distribution.
+
+Now, let's do some backwards model selection for the count model.
+```{r}
+# interaction model
+mod_full_nbin_wes <- glm.nb(total.time.open.after ~ species * totalpara + standard.length,
+                        data = beh_data_nozeros_wes
+                        )
+
+# dropping length
+mod_nolength_nbin_wes <- glm.nb(total.time.open.after ~ species* totalpara,
+                        data = beh_data_nozeros_wes
+                        )
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_full_nbin_wes, mod_nolength_nbin_wes) # no sig difference, so let's drop standard length
+
+# no interaction model
+mod_combined_nbin_wes <- glm.nb(total.time.open.after ~ species + totalpara,
+                        data = beh_data_nozeros_wes
+                        )
+# test 2-way with log likelihood ratio test
+lrtest(mod_nolength_nbin_wes, mod_combined_nbin_wes) # no sig difference, so let's go with the simpler, combined model
+```
 
 Let's check those assumptions.
 ```{r}
 # checking assumptions for the combined model
 # First we have to simulate your residuals
-sim.output <- DHARMa::simulateResiduals(mod_site_nbin_wes)
+sim.output <- DHARMa::simulateResiduals(mod_full_nbin_wes)
 
 # then you can plot them
 plot(sim.output) # these look fine
@@ -1675,16 +1755,13 @@ plot(sim.output) # these look fine
 # gives you a bunch of tests of dispersion etc
 DHARMa::testResiduals(sim.output) # all look ok
 
-check_overdispersion(mod_site_nbin_wes) # no overdispersion detected. dispersion ratio = 0.667 p = 0.296
+check_overdispersion(mod_full_nbin_wes) # no overdispersion detected.
 ```
 
 ##### Binary model
 
 Now, let's look at the zero inflated model. We'll need to make a column that turns time in the open into a binary (0 or 1 for no time or some time in the open).
 ```{r}
-# make column with binary value for infection status
-wes_data$binary.status <- ifelse(wes_data$total.time.open.after == 0,0,1)
-
 # now, let's test which distribution is best
 
 mod_site_zi_binom_wes <- glm(binary.status ~ species,

@@ -22,9 +22,10 @@ library(MASS)
 library(here)
 library(knitr)
 library(DHARMa)
-library(glmmTMB)
+# library(glmmTMB) I think I can delete this now
 library(performance)
 library(emmeans)
+library(ggeffects)
 ```
 
 ## Raw Data
@@ -1560,6 +1561,7 @@ DHARMa::testResiduals(sim.output) # all look ok
 
 check_overdispersion(mod_combined_nbin_br) # no overdispersion detected.
 ```
+
 ###### Br Binary model
 ```{r}
 # filtering data to just brownsville
@@ -1747,7 +1749,7 @@ Let's check those assumptions.
 ```{r}
 # checking assumptions for the combined model
 # First we have to simulate your residuals
-sim.output <- DHARMa::simulateResiduals(mod_full_nbin_wes)
+sim.output <- DHARMa::simulateResiduals(mod_combined_nbin_wes)
 
 # then you can plot them
 plot(sim.output) # these look fine
@@ -1755,42 +1757,70 @@ plot(sim.output) # these look fine
 # gives you a bunch of tests of dispersion etc
 DHARMa::testResiduals(sim.output) # all look ok
 
-check_overdispersion(mod_full_nbin_wes) # no overdispersion detected.
+check_overdispersion(mod_combined_nbin_wes) # no overdispersion detected.
 ```
 
-##### Binary model
+###### Wes Binary model
 
-Now, let's look at the zero inflated model. We'll need to make a column that turns time in the open into a binary (0 or 1 for no time or some time in the open).
+Now, let's look at the zero inflated model.
 ```{r}
 # now, let's test which distribution is best
 
-mod_site_zi_binom_wes <- glm(binary.status ~ species,
+mod_full_zi_binom_wes <- glm(binary.status ~ species * totalpara + standard.length,
                          family = binomial(link = "logit"),
                         data = wes_data
                         )
 
-mod_site_zi_poisson_wes <- glm(binary.status ~ species,
+mod_full_zi_poisson_wes <- glm(binary.status ~ species * totalpara + standard.length,
                         family = poisson(link = "log"),
                         data = wes_data
                         )
                         
 
-mod_site_zi_nbin_wes <- glm.nb(binary.status ~ species,
+mod_full_zi_nbin_wes <- glm.nb(binary.status ~ species * totalpara + standard.length,
                           data = wes_data) # warning error about iteration limit indicates data is underdispersed. This is confirmed with the dispersion test below.
 
 # let's compare dispersion
-check_overdispersion(mod_site_zi_binom_wes) # data is not over dispersed
-check_overdispersion(mod_site_zi_poisson_wes) # data is not over dispersed
-check_overdispersion(mod_site_zi_nbin_wes) # data is under dispersed
+check_overdispersion(mod_full_zi_binom_wes) # data is not over dispersed
+check_overdispersion(mod_full_zi_poisson_wes) # data is not over dispersed
+check_overdispersion(mod_full_zi_nbin_wes) # data is under dispersed
 
-lrtest(mod_site_zi_binom_wes, mod_site_zi_poisson_wes) # significant difference, and the binomial model has a lower log lik
+lrtest(mod_full_zi_binom_wes, mod_full_zi_poisson_wes) # significant difference, and the binomial model has a lower log lik
 ```
 
-Ok, I'm going to go ahead with the binomial model since that makes more sense here and seems "good enough". Let's check those assumptions.
+Ok, I'm going to go ahead with the binomial model since that makes more sense here and seems "good enough".
+
+Now, let's do some backwards model selection for the binomial model.
+```{r}
+# interaction model
+mod_full_zi_binom_wes <- glm(binary.status ~ species * totalpara + standard.length,
+                         family = binomial(link = "logit"),
+                        data = wes_data
+                        )
+# dropping length
+mod_nolength_zi_binom_wes <- glm(binary.status ~ species * totalpara,
+                         family = binomial(link = "logit"),
+                        data = wes_data
+                        )
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_full_zi_binom_wes, mod_nolength_zi_binom_wes) # no sig difference, so let's go with the simpler, combined model
+
+# no interaction model
+mod_combined_zi_binom_wes <- glm(binary.status ~ species + totalpara,
+                         family = binomial(link = "logit"),
+                        data = wes_data
+                        )
+
+# test 2-way with log likelihood ratio test
+lrtest(mod_nolength_zi_binom_wes, mod_combined_zi_binom_wes) # sig difference, so lets go with the nolength interaction model
+```
+
+Let's check those assumptions.
 ```{r}
 # checking assumptions for the combined model
 # First we have to simulate your residuals
-sim.output <- DHARMa::simulateResiduals(mod_site_zi_binom_wes)
+sim.output <- DHARMa::simulateResiduals(mod_nolength_zi_binom_wes)
 
 # then you can plot them
 plot(sim.output) # looks ok
@@ -1799,15 +1829,15 @@ plot(sim.output) # looks ok
 DHARMa::testResiduals(sim.output) # looks ok
 
 # check dispersion of combined
-check_overdispersion(mod_site_zi_binom_wes) # no overdispersion detected. dispersion ratio = 1.012 p = 0.936
+check_overdispersion(mod_nolength_zi_binom_wes) # no overdispersion detected.
 ```
 
-##### Conclusions
+###### Wes Conclusions
 Let's take a look at our final models.
 ```{r}
-summary(mod_site_nbin_wes) # species significant (est = 0.3903, SE = 0.1979, p = 0.0486)
+summary(mod_combined_nbin_wes) # species significant (est = -0.447, SE = 0.210, p = 0.033)
 
-summary(mod_site_zi_binom_wes) # species significant (est = -1.2792, SE = 0., p = 0.068
+summary(mod_nolength_zi_binom_wes) # species significant (est = -1.2792, SE = 0., p = 0.068
 ```
 
 ## Figures
@@ -1889,6 +1919,7 @@ ggplot(parasite_data_sum, aes(x = site.id, y = prop_present, fill = species)) +
 # save it
 ggsave("para_prop.jpg", width = 5, height = 4)
 ```
+
 
 ### Behavior
 
@@ -2059,3 +2090,26 @@ beh_indiv_pl2 <- all_data_long %>%
 beh_indiv_pl2
 ```
 
+Graph showing the proportion of fish that entered the open half of the arena
+```{r}
+# summarize data
+all_data_sum <- all_data %>%
+  group_by(species, site.id) %>%
+  summarize(prop_open = mean(binary.status), .groups = "drop")
+
+#plot data
+ggplot(all_data_sum, aes(x = site.id, y = prop_open, fill = species)) +
+  geom_col(position = "dodge",
+           alpha = 0.5) +
+  labs(y = "Proportion of fish that entered open half of arena", x = "Site") +
+  scale_y_continuous(limits = c(0,1)) +
+  theme_classic()
+
+# ggplot(parasite_data, aes(x = species, fill = factor(para_binary))) +
+#   geom_bar(position = "fill") +
+#   labs(fill = "Binary", y = "Proportion of fish with parasites") +
+#   facet_wrap(~site.id) +
+#   theme_minimal()
+
+# save it
+ggsave("beh_prop.jpg", width = 5, height = 4)
